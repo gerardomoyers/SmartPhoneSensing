@@ -64,7 +64,7 @@ public class MainActivity extends Activity implements OnClickListener {
         buttonRssi.setOnClickListener(this);
     }
 
-    public void saveFile(String file, String text){
+    public void saveFile(String file, List<ScanResult> scanResults){
 
         final File path =
                 Environment.getExternalStoragePublicDirectory
@@ -84,7 +84,16 @@ public class MainActivity extends Activity implements OnClickListener {
             //FileOutputStream fos = openFileOutput(file, Context.MODE_PRIVATE);
             filee.createNewFile();
             FileOutputStream fos = new FileOutputStream(filee);
-            fos.write(text.getBytes());
+
+            // Write results to a label
+            for (ScanResult scanResult : scanResults) {
+
+                fos.write(scanResult.BSSID.getBytes());
+                fos.write("\n".getBytes());
+
+            }
+
+
             fos.close();
             Toast.makeText(MainActivity.this, "Saved!", Toast.LENGTH_SHORT).show();
         }catch (Exception e){
@@ -122,8 +131,11 @@ public class MainActivity extends Activity implements OnClickListener {
             textRssi.setText(textRssi.getText() + "\n\tBSSID = "
                     + scanResult.BSSID + "    RSSI = "
                     + scanResult.level + "dBm");
-            saveFile(filename, scanResults.get(0).BSSID);
+
         }
+
+        saveFile(filename, scanResults);
+
 
 
     }
