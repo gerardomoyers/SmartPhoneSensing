@@ -86,10 +86,7 @@ matrix = {}
 for key, value in glori.items():
     matrix[key] = {}
     for k, v in glori[key].items():
-        ind=0
-        for kk, vv in glori[key][k].GetDict().items():
-            matrix[key][k][ind] = 0
-            
+        matrix[key][k] = row
 
 # for key, value in matrix.items():
 #     print("\n")
@@ -126,9 +123,9 @@ for key, value in glori.items():
 
 
 
-# for key, value in matrix.items():
-#     print("\n")
-#     print("key: ",key)
-#     print("\n")
-#     for k, v in matrix[key].items():
-#         print( "cell:", k, " :", v)
+for key, value in matrix.items():
+    print("\n")
+    print("key: ",key)
+    print("\n")
+    for k, v in matrix[key].items():
+        print( "cell:", k, " :", v)
