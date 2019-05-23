@@ -67,7 +67,6 @@ for key, value in gen.items():
             glori[k] = {}
             glori[k][index]=thinkstats2.Pmf(v)
 
-str = "24:01:c7:76:27:30\n"
 #print(glori[str].items())
 
 # for key, value in glori.items():
@@ -78,15 +77,23 @@ str = "24:01:c7:76:27:30\n"
 #         print( "cell:", k, " :", v)
 
 #now I have glori but it should have a fixed format, I am going to consider values from -38 to -94
-hey = np.arange(-38, -94, -1) #reference, future will be np.arange(0, 255, 1)
+hey = np.arange(-38, -95, -1) #reference, future will be np.arange(0, 255, 1)
 row = np.zeros(len(hey))
+reference = np.arange(16, 0, -1)
+
+
+
 
 matrix = {}
+
+
 
 for key, value in glori.items():
     matrix[key] = {}
     for k, v in glori[key].items():
-        matrix[key][k] = row
+        matrix[key][k]={}
+        for i in range(len(row)):
+            matrix[key][k][i] = 0
 
 # for key, value in matrix.items():
 #     print("\n")
@@ -96,36 +103,77 @@ for key, value in glori.items():
 #         print( "cell:", k, " :", v)
 
 
-str = "10:44:00:3f:d9:dd\n"
 count = 0
 for key, value in glori.items():
-    for k, v in glori[key].items():
-        if (key == str):
-            print("cell:", k)
-        #v.GetDict().items():
-        for kk, vv in glori[key][k].GetDict().items():
-            #if (key == str):
-                #print(kk)
-            if np.isin(kk, hey):
-                #if (key ==str):
-                    #print("true")
-                i, = np.where(hey == kk)
-                i#f (key ==str):
-                    #print(index)
-                index = i[0]
-                matrix[key][k][index] = vv #percent 0.03
-                #if (key==str):
-                    #print(matrix[key][k][index])
-                    #print(matrix[key][k][0])
+    for j in range(len(reference)):
+        if reference[j] in glori[key].keys():
+            for kk, vv in glori[key][reference[j]].GetDict().items():
+                if np.isin(kk, hey):
+                    i, = np.where(hey == kk)
+                    index = i[0]
+                    matrix[key][reference[j]][index] = vv  # percent 0.03
+        else:
+            matrix[key][reference[j]] = {}
+            for i in range(len(row)):
+                matrix[key][reference[j]][i] = 0  # stuff non found cells w zeros
+
+    # for k, v in glori[key].items():
+    #     for kk, vv in glori[key][k].GetDict().items():
+    #         if np.isin(kk, hey):
+    #             i, = np.where(hey == kk)
+    #             index = i[0]
+    #             matrix[key][k][index] = vv #percent 0.03
+
+
+# we introduce zeros NEWSTUFF
+# for key, value in glori.items():
+#     for j in range(len(reference)):
+#         if j in glori[key]:
+#             continue
+#         else:
+#             matrix[key][j] = {}
+#             for i in range(len(row)):
+#                 matrix[key][j][i] = 0 #stuff non found cells w zeros
 
 
 
+# for key, value in matrix.items():
+#     print("\n")
+#     print("key: ",key)
+#     print("\n")
+#     for k, v in matrix[key].items():
+#         print( "cell:", k)
+#         for kk, vv in matrix[key][k].items():
+#             print(-kk-38, vv)
 
+
+#lets try to order dict
+definitive = {}
+
+for key, value in matrix.items():
+    definitive[key] = {}
+    definitive[key] = OrderedDict(sorted(matrix[key].items(), key=lambda t: t[0]))
 
 
 for key, value in matrix.items():
-    print("\n")
-    print("key: ",key)
-    print("\n")
-    for k, v in matrix[key].items():
-        print( "cell:", k, " :", v)
+    trial = OrderedDict(matrix[key])
+    print(trial)
+
+file1 = open("MyFile.txt","a")
+for key, value in definitive.items():
+    file1.write("\n")
+    file1.write("key: ")
+    file1.write(key)
+    for k, v in definitive[key].items():
+        file1.write("\n")
+        file1.write( "cell: ")
+
+        file1.write(str(k))
+        file1.write("\n")
+        for kk, vv in definitive[key][k].items():
+            file1.write(str(vv))
+            file1.write(" ,")
+
+    file1.write("\n")
+
+file1.close()
