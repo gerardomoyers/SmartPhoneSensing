@@ -53,9 +53,8 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     //Map<Integer, Float[]> row = new HashMap<Integer, Float[]>();
 
     Map<String, Map<Integer, Float[]>> matrix = new HashMap<String, Map<Integer, Float[]>>();
-    boolean see = false;
-    boolean see2 = false;
-    boolean see3 = false;
+
+    Integer lengthPmf= 0;
 
 
 
@@ -90,7 +89,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         String kname= "key";
 
         while ((st = br.readLine()) != null) {
-            Log.e("string", st);
+
 
             if (st.indexOf('y')>0){
 
@@ -102,8 +101,8 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                     //store BSSID
 
 
-                    kkey = st.substring(5, st.length());https://www.google.com/search?client=ubuntu&channel=fs&q=ordered+dict+in+python+3&ie=utf-8&oe=utf-8;
-                    Log.e("I stored key", kkey);
+                    kkey = st.substring(5, st.length()); https://www.google.com/search?client=ubuntu&channel=fs&q=ordered+dict+in+python+3&ie=utf-8&oe=utf-8;
+
                     //matrix.put(kkey, row);
 
                     st=br.readLine(); //empty line
@@ -116,9 +115,9 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                     }
 
                     while (!(st.contentEquals(""))) {
-                        Log.e("I stored key", kkey);
+
                         if (st.contentEquals("")){
-                            Log.e("hey","shoulnot1");
+
                         }
                         if (coun > 0){
                             st = br.readLine();
@@ -143,6 +142,10 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                         //st is already 0,0,0,0...
                         String[] stringsF = st.split(",");
                         Float[] arr = new Float[stringsF.length];
+
+                        //for use later on
+                        lengthPmf=stringsF.length;
+
                         for (int i = 0; i < stringsF.length; i++) {
                             //pmf.add(Float.valueOf(stringsF[i]));
                             arr[i]=Float.valueOf(stringsF[i]);
@@ -242,11 +245,14 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     }
 
     @Override
-     public void onClick(View v) {
+    public void onClick(View v) {
+
         Float[] prob_cells = new Float[] {
                 (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16
         };
         Float maxprob = (float) 1/16;
+
+
         //here is where we create dictionary
         try {
             readFromFile2();
@@ -261,57 +267,130 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         wifiManager.startScan();
 
         // Store results in a list.
-        List<ScanResult> scanResults = wifiManager.getScanResults();
+        //List<ScanResult> scanResults = wifiManager.getScanResults();
         int pos=0;
-        int coun = 0;
-
-        // Write results to a label
-        Log.e("COUNTER", String.valueOf(counter));
-        for (ScanResult scanResult : scanResults) {
-            //textRssi.setText(textRssi.getText() + "\n\tBSSID = "
-            //        + scanResult.BSSID + "    RSSI = "
-            //        + scanResult.level + "dBm");
-            textRssi.setText("\ncoun" +counter);
+        int counter = 0;
 
 
-////   -38 a -95 dbm
 
-            if (matrix.get(scanResult.BSSID)!=null){
-                Map<Integer, Float[]> temp = matrix.get(scanResult.BSSID);
-                Float[] arr = new Float[16];
-                Integer indexcell, index = (-scanResult.level)-38;
-                Float normalize;
-                for (Map.Entry<Integer, Float[]> entry: temp.entrySet()){
-                    //arr[counter] = entry.getValue()[index];
-                    arr[counter] = (float)0.01 * counter;
-                    counter = counter +1;
-                }
-                counter = 0;
-                //while (maxprob < (float) 0.8){
-                    normalize = (float)0;
-                    for (int i = 0; i<arr.length; i++) {
-                        prob_cells[i] *= arr[i];
-                        normalize += prob_cells[i];
-                    }
-                    for (int i = 0; i<prob_cells.length; i++) {
-                        prob_cells[i] /= normalize;
-                        if (prob_cells[i] > maxprob) {
-                            maxprob = prob_cells[i];
-                            indexcell = i;
-                        }
-                    }
-                //}
-                if (maxprob > 0.5) {
-                    // cell choosen
-                    break;
-                }
+        Map<Integer, Map<String,Integer>> scanResults = new HashMap<Integer, Map<String,Integer>>();
+        final File path =
+                Environment.getExternalStoragePublicDirectory
+                        (
+                                Environment.DIRECTORY_DOWNLOADS
+                        );
+        File file = new File(path, "BSSIDS.txt");
+
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(file));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        String line = "";
+        Integer indd = 0;
+        String stringg= "k";
+        Integer counterr =0;
+        Integer linees = 0;
+        Integer here =0;
+        while (true) {
+            try {
+                if (!((line = br.readLine()) != null)) break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Map<String, Integer> inside = new HashMap<String, Integer>();
+            if (line.substring(0, 1).contentEquals("-")) {
+                here = 1;
+                //Map<String, Integer> inside = new HashMap<String, Integer>();
+                indd = Integer.parseInt(line);
+                inside.put(stringg, indd);
+                scanResults.put(counterr, inside);
+                counterr = counterr+1;
+
+
+            }
+            else{
+                stringg = line;
+            }
+
+            linees = linees+1;
+            if (linees>60){
+                break;
             }
         }
 
-        //check matrix
+        for (int i =0; i<scanResults.size();i++) {
+            Map<String, Integer> tempo = scanResults.get(i);
+            Float[] arr = new Float[16];
+            if (matrix.get(tempo.keySet().toArray()[0])!=null) {
+                Map<Integer, Float[]> temp = matrix.get(tempo.keySet().toArray()[0]);
+                Integer index = (-tempo.get(tempo.keySet().toArray()[0])) - 38;
+                Float normalize;
+                Integer indexcell = 0;
+                Boolean check = false;
+                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
+                    Integer c = (Integer) temp.keySet().toArray()[counter];
+
+                        arr[c-1] = entry.getValue()[index];
+                        if (arr[c-1] != 0){
+                            check = true;
+                        }
+                    counter = counter + 1;
+                }
+
+                if (check) {
+
+                    normalize = (float) 0;
+                    for (int ii = 0; ii < arr.length; ii++) {
+                        prob_cells[ii] *= arr[ii];
+                        normalize += prob_cells[ii];
+                    }
+                    for (int j = 0; j < prob_cells.length; j++) {
+                        prob_cells[j] /= normalize;
+                        if (prob_cells[j] > maxprob) {
+                            maxprob = prob_cells[j];
+                            indexcell = j;
+                        }
+                    }
+                    //}
+                    Log.e("result", String.valueOf(indexcell));
+                    textRssi.setText("\n\tScan all access points:"+indexcell);
+                    if (maxprob > 0.9) {
+                        // cell choosen
+                        break;
+                    }
+                }
 
 
+            }
+            counter = 0;
+
+        }
 
 
+        // Write results to a label
+
+//        for (ScanResult scanResult : scanResults) {
+//            //textRssi.setText(textRssi.getText() + "\n\tBSSID = "
+//            //        + scanResult.BSSID + "    RSSI = "
+//            //        + scanResult.level + "dBm");
+//            textRssi.setText("\ncoun" +counter);
+//
+//            if (matrix.get(scanResult.BSSID)!=null){
+//                Map<Integer, Float[]> temp = matrix.get(scanResult.BSSID);
+//                Float[] arr = new Float[lengthPmf];
+//                Integer index = (-scanResult.level)-38;
+//                for (Map.Entry<Integer, Float[]> entry: temp.entrySet()){
+//                    if (counter<57) {
+//                        arr[counter] = entry.getValue()[index];
+//                    }
+//                    counter = counter +1;
+//                }
+//
+//            }
+//
+//        }
     }
 }
