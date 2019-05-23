@@ -242,8 +242,11 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     }
 
     @Override
-    public void onClick(View v) {
-
+     public void onClick(View v) {
+        Float[] prob_cells = new Float[] {
+                (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16
+        };
+        Float maxprob = (float) 1/16;
         //here is where we create dictionary
         try {
             readFromFile2();
@@ -269,9 +272,40 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             //        + scanResult.BSSID + "    RSSI = "
             //        + scanResult.level + "dBm");
             textRssi.setText("\ncoun" +counter);
-            Log.e("rssi", String.valueOf(scanResult.level));
-            Log.e("nameeee", scanResult.BSSID);
-            coun = coun+1;
+
+
+////   -38 a -95 dbm
+
+            if (matrix.get(scanResult.BSSID)!=null){
+                Map<Integer, Float[]> temp = matrix.get(scanResult.BSSID);
+                Float[] arr = new Float[16];
+                Integer indexcell, index = (-scanResult.level)-38;
+                Float normalize;
+                for (Map.Entry<Integer, Float[]> entry: temp.entrySet()){
+                    //arr[counter] = entry.getValue()[index];
+                    arr[counter] = (float)0.01 * counter;
+                    counter = counter +1;
+                }
+                counter = 0;
+                //while (maxprob < (float) 0.8){
+                    normalize = (float)0;
+                    for (int i = 0; i<arr.length; i++) {
+                        prob_cells[i] *= arr[i];
+                        normalize += prob_cells[i];
+                    }
+                    for (int i = 0; i<prob_cells.length; i++) {
+                        prob_cells[i] /= normalize;
+                        if (prob_cells[i] > maxprob) {
+                            maxprob = prob_cells[i];
+                            indexcell = i;
+                        }
+                    }
+                //}
+                if (maxprob > 0.5) {
+                    // cell choosen
+                    break;
+                }
+            }
         }
 
         //check matrix
