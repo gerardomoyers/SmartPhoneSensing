@@ -8,7 +8,10 @@ counter = 0
 #generate matrix
 gen = {} #store by index 1 -> [BSSID]
 
-for filename in os.listdir(path):
+listFiles = ["BSSIDS11_54_18.txt","BSSIDS12_13_23.txt","BSSIDS12_18_55.txt","BSSIDS12_28_15.txt","BSSIDS12_35_22.txt","BSSIDS12_42_09.txt","BSSIDS12_46_51.txt","BSSIDS12_53_18.txt","BSSIDS12_57_34.txt","BSSIDS13_03_34.txt","BSSIDS13_08_26.txt","BSSIDS13_16_23.txt","BSSIDS13_20_43.txt","BSSIDS13_25_57.txt","BSSIDS13_31_02.txt","BSSIDS13_35_49.txt"]
+
+#for filename in os.listdir(path):
+for filename in listFiles:
     counter = counter + 1
     myDict ={}
     gen[counter] ={}
@@ -17,6 +20,9 @@ for filename in os.listdir(path):
     level = -56
 
     f = open('/home/teresa/Desktop/measurementSMS/%s'%filename, "r")
+    #f = open('/home/teresa/Desktop/measurementSMS/BSSIDS11_54_18.txt', "r")
+    print(filename)
+    print(counter)
     line = f.readline()
     count = 0;
     while line:
@@ -54,9 +60,40 @@ for filename in os.listdir(path):
 
 #now we have the matrix w BSSID and RSS values, we need to start with BSSID create a dict that can hold pmf
 #dict will look like: "BSSID":{ "16": pmf "15": pmf}
+
+for key, value in gen.items():
+    print("\n")
+    print("NEW KEY", key)
+    for k, v in gen[key].items():
+        print( "bssid:", k, " :", v)
+
+trial={}
+
+for key, value in gen.items():
+    #key is the cell where I am
+    index = 17 -key;
+    #loop through every BSSID
+    for k, v in gen[key].items():
+        #we get a BSSID
+        if k in trial.keys():
+            trial[k][index]=v
+        else:
+            trial[k] = {}
+            trial[k][index]=v
+
+
+# for key, value in trial.items():
+#     print("\n")
+#     print("key: ",key)
+#     print("\n")
+#     for k, v in trial[key].items():
+#         print(k)
+#         print(trial[key][k])
+
 glori={}
 
 for key, value in gen.items():
+    #key is the cell where I am
     index = 17 -key;
     #loop through every BSSID
     for k, v in gen[key].items():
@@ -74,7 +111,8 @@ for key, value in gen.items():
 #     print("key: ",key)
 #     print("\n")
 #     for k, v in glori[key].items():
-#         print( "cell:", k, " :", v)
+#         print(k)
+#         print(glori[key][k])
 
 #now I have glori but it should have a fixed format, I am going to consider values from -38 to -94
 hey = np.arange(-38, -95, -1) #reference, future will be np.arange(0, 255, 1)
@@ -157,7 +195,13 @@ for key, value in matrix.items():
 
 for key, value in matrix.items():
     trial = OrderedDict(matrix[key])
-    print(trial)
+    #print(trial)
+
+# strrr = "54:4a:00:66:12:a0\n"
+# for k, v in definitive[strrr].items():
+#     #print(hey.index(-65))
+#     heyyyyy = 71-38
+#     print(definitive[strrr][k][heyyyyy])
 
 file1 = open("MyFile.txt","a")
 for key, value in definitive.items():
