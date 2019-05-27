@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import android.app.Activity;
 import android.net.wifi.ScanResult;
@@ -55,8 +60,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     Map<String, Map<Integer, Float[]>> matrix = new HashMap<String, Map<Integer, Float[]>>();
 
     Integer lengthPmf= 0;
-
-
+    private Object AgeComparator;
 
 
     @Override
@@ -78,7 +82,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                         (
                                 Environment.DIRECTORY_DOWNLOADS
                         );
-        File file = new File(path, "MyFile.txt");
+        File file = new File(path, "MyFileFiltered.txt");
 
         BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -247,10 +251,17 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     @Override
     public void onClick(View v) {
 
-        Float[] prob_cells = new Float[] {
-                (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16, (float) 1/16
+        Float[] prob_cells = new Float[]{
+                (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16
         };
-        Float maxprob = (float) 1/16;
+        Float maxprob = (float) 1 / 16;
+
+        Float[] posteriorFinal = new Float[]{
+                (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0
+        };
+        Float[] normalized = new Float[]{
+                (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0
+        };
 
 
         //here is where we create dictionary
@@ -266,20 +277,20 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         // Start a wifi scan.
         wifiManager.startScan();
 
-        // Store results in a list.
-        //List<ScanResult> scanResults = wifiManager.getScanResults();
+
+        //STATIC DATA
+/*
         int pos=0;
         int counter = 0;
 
-
-
         Map<Integer, Map<String,Integer>> scanResults = new HashMap<Integer, Map<String,Integer>>();
+        HashMap<String, Integer> codenames = new HashMap<String, Integer>();
         final File path =
                 Environment.getExternalStoragePublicDirectory
                         (
-                                Environment.DIRECTORY_DOWNLOADS
+                                Environment.DIRECTORY_DCIM + "/Camera/"
                         );
-        File file = new File(path, "BSSIDS.txt");
+        File file = new File(path, "BSSIDS10:45:28.txt");
 
         BufferedReader br = null;
         try {
@@ -307,6 +318,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                 indd = Integer.parseInt(line);
                 inside.put(stringg, indd);
                 scanResults.put(counterr, inside);
+                codenames.put(stringg, indd);
                 counterr = counterr+1;
 
 
@@ -321,76 +333,250 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             }
         }
 
-        for (int i =0; i<scanResults.size();i++) {
-            Map<String, Integer> tempo = scanResults.get(i);
-            Float[] arr = new Float[16];
-            if (matrix.get(tempo.keySet().toArray()[0])!=null) {
-                Map<Integer, Float[]> temp = matrix.get(tempo.keySet().toArray()[0]);
-                Integer index = (-tempo.get(tempo.keySet().toArray()[0])) - 38;
-                Float normalize;
-                Integer indexcell = 0;
-                Boolean check = false;
-                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
-                    Integer c = (Integer) temp.keySet().toArray()[counter];
+        Set<Map.Entry<String, Integer>> entries = codenames.entrySet();
 
-                        arr[c-1] = entry.getValue()[index];
-                        if (arr[c-1] != 0){
+
+        // inspired by Read more: http://www.java67.com/2015/01/how-to-sort-hashmap-in-java-based-on.html#ixzz5oxgKKgRo
+        Comparator<Map.Entry<String, Integer>> valueComparator = new Comparator<Map.Entry<String, Integer>>() {
+
+            @Override
+            public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+                Integer v1 = e1.getValue();
+                Integer v2 = e2.getValue();
+                return v2.compareTo(v1);
+            }
+        };
+
+        List<Map.Entry<String, Integer>> listOfEntries = new ArrayList<Map.Entry<String, Integer>>(entries);
+
+        // sorting HashMap by values using comparator
+        Collections.sort(listOfEntries, valueComparator);
+
+        LinkedHashMap<String, Integer> sortedByValue = new LinkedHashMap<String, Integer>(listOfEntries.size());
+
+        // copying entries from List to Map
+        for(Map.Entry<String, Integer> entry : listOfEntries){
+            sortedByValue.put(entry.getKey(), entry.getValue());
+        }
+
+        */
+
+
+
+
+/* start SERIAL!!!!
+
+        for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
+
+                Float[] arr = new Float[16];
+                if (matrix.get(entryScan.getKey()) != null) {
+                    Map<Integer, Float[]> temp = matrix.get(entryScan.getKey());
+                    Integer index = (-entryScan.getValue() - 38);
+                    Float normalize;
+                    Integer indexcell = 0;
+                    Boolean check = false;
+
+                    for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
+                        Integer c = (Integer) temp.keySet().toArray()[counter];
+
+                        arr[c - 1] = entry.getValue()[index];
+                        if (arr[c - 1] != 0) {
                             check = true;
                         }
+                        counter = counter + 1;
+                    }
+
+                    if (check) {
+                        normalize = (float) 0;
+                        for (int ii = 0; ii < arr.length; ii++) {
+                            prob_cells[ii] *= arr[ii];
+                            normalize += prob_cells[ii];
+                        }
+                        for (int j = 0; j < prob_cells.length; j++) {
+                            prob_cells[j] /= normalize;
+                            if (prob_cells[j] > maxprob) {
+                                maxprob = prob_cells[j];
+                                indexcell = j;
+                            }
+                        }
+                        //}
+                        Log.e("result", String.valueOf(indexcell));
+
+                        if (maxprob > 0.9) {
+                            // cell choosen
+                            textRssi.setText("\n\tScan all access points:" + indexcell);
+                            break;
+                        }
+                    }
+
+                }
+                counter = 0;
+            }
+
+
+// end SERIAL!!! */
+        /* start PARALELL
+        //paralell processing
+        Float normalize = (float) 0;
+        Integer indexcell = 0;
+
+
+        for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
+
+            Float[] arr = new Float[16];
+
+            if (matrix.get(entryScan.getKey()) != null) {
+
+                Map<Integer, Float[]> temp = matrix.get(entryScan.getKey());
+                Integer index = (-entryScan.getValue() - 38);
+                Boolean check = false;
+
+                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
+                    Integer c = (Integer) temp.keySet().toArray()[counter];
+                    arr[c - 1] = entry.getValue()[index];
+                    if (arr[c - 1] != 0) {
+                        check = true;
+                    }
                     counter = counter + 1;
                 }
 
-                if (check) {
 
-                    normalize = (float) 0;
+                    prob_cells = new Float[]{
+                            (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16
+                    };
+
                     for (int ii = 0; ii < arr.length; ii++) {
                         prob_cells[ii] *= arr[ii];
-                        normalize += prob_cells[ii];
+                        posteriorFinal[ii] = posteriorFinal[ii]+prob_cells[ii];
+                        //normalize = normalize + posteriorFinal[ii]; //we start adding values of normalization
                     }
-                    for (int j = 0; j < prob_cells.length; j++) {
-                        prob_cells[j] /= normalize;
-                        if (prob_cells[j] > maxprob) {
-                            maxprob = prob_cells[j];
-                            indexcell = j;
-                        }
-                    }
-                    //}
-                    Log.e("result", String.valueOf(indexcell));
-                    textRssi.setText("\n\tScan all access points:"+indexcell);
-                    if (maxprob > 0.9) {
-                        // cell choosen
-                        break;
+
+                counter = 0;
+                for (int j = 0; j < posteriorFinal.length; j++){
+                    normalize = normalize + posteriorFinal[j];
+                }
+                for (int j = 0; j < posteriorFinal.length; j++) {
+                    normalized[j] = posteriorFinal[j]/ normalize;
+                    if (normalized[j] > maxprob) {
+                        maxprob = normalized[j];
+                        indexcell = j;
                     }
                 }
-
+                normalize = Float.valueOf(0);
 
             }
-            counter = 0;
 
         }
 
 
-        // Write results to a label
+        for (int j = 0; j < posteriorFinal.length; j++) {
+            normalized[j] = posteriorFinal[j]/ normalize;
+            if (posteriorFinal[j] > maxprob) {
+                maxprob = posteriorFinal[j];
+                indexcell = j;
+            }
+        }
 
-//        for (ScanResult scanResult : scanResults) {
-//            //textRssi.setText(textRssi.getText() + "\n\tBSSID = "
-//            //        + scanResult.BSSID + "    RSSI = "
-//            //        + scanResult.level + "dBm");
-//            textRssi.setText("\ncoun" +counter);
-//
-//            if (matrix.get(scanResult.BSSID)!=null){
-//                Map<Integer, Float[]> temp = matrix.get(scanResult.BSSID);
-//                Float[] arr = new Float[lengthPmf];
-//                Integer index = (-scanResult.level)-38;
-//                for (Map.Entry<Integer, Float[]> entry: temp.entrySet()){
-//                    if (counter<57) {
-//                        arr[counter] = entry.getValue()[index];
-//                    }
-//                    counter = counter +1;
-//                }
-//
-//            }
-//
-//        }
+        if (maxprob > 0.9) {
+            // cell choosen
+            textRssi.setText("\n\tScan all access points:" + indexcell);
+        }
+
+end paralell
+
+        */
+
+
+        //DYNAMIC DATA: after wifi scan
+
+        // Store results in a list.
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+
+        //ordering results
+        HashMap<String, Integer> codenames = new HashMap<String, Integer>();
+
+
+        for (ScanResult scanResult : scanResults) {
+            codenames.put(scanResult.BSSID, scanResult.level);
+        }
+
+        Set<Map.Entry<String, Integer>> entries = codenames.entrySet();
+
+        // inspired by Read more: http://www.java67.com/2015/01/how-to-sort-hashmap-in-java-based-on.html#ixzz5oxgKKgRo
+        Comparator<Map.Entry<String, Integer>> valueComparator = new Comparator<Map.Entry<String, Integer>>() {
+
+            @Override
+            public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+                Integer v1 = e1.getValue();
+                Integer v2 = e2.getValue();
+                return v2.compareTo(v1);
+            }
+        };
+
+        List<Map.Entry<String, Integer>> listOfEntries = new ArrayList<Map.Entry<String, Integer>>(entries);
+
+        // sorting HashMap by values using comparator
+        Collections.sort(listOfEntries, valueComparator);
+
+        LinkedHashMap<String, Integer> sortedByValue = new LinkedHashMap<String, Integer>(listOfEntries.size());
+
+        // copying entries from List to Map
+        for (Map.Entry<String, Integer> entry : listOfEntries) {
+            sortedByValue.put(entry.getKey(), entry.getValue());
+        }
+
+        //scanResults SORTED by level, now BAYES:
+
+        Float normalize = (float) 0;
+        Integer indexcell = 0;
+
+
+        for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
+
+            Float[] arr = new Float[16];
+
+            if (matrix.get(entryScan.getKey()) != null) {
+
+                Map<Integer, Float[]> temp = matrix.get(entryScan.getKey());
+                Integer index = (-entryScan.getValue() - 38);
+                Boolean check = false;
+
+                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
+                    Integer c = (Integer) temp.keySet().toArray()[counter];
+                    arr[c - 1] = entry.getValue()[index];
+                    if (arr[c - 1] != 0) {
+                        check = true;
+                    }
+                    counter = counter + 1;
+                }
+
+
+                prob_cells = new Float[]{
+                        (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16
+                };
+
+                for (int ii = 0; ii < arr.length; ii++) {
+                    prob_cells[ii] *= arr[ii];
+                    posteriorFinal[ii] = posteriorFinal[ii]+prob_cells[ii];
+                    //normalize = normalize + posteriorFinal[ii]; //we start adding values of normalization
+                }
+
+                counter = 0;
+                for (int j = 0; j < posteriorFinal.length; j++){
+                    normalize = normalize + posteriorFinal[j];
+                }
+                for (int j = 0; j < posteriorFinal.length; j++) {
+                    normalized[j] = posteriorFinal[j]/ normalize;
+                    if (normalized[j] > maxprob) {
+                        maxprob = normalized[j];
+                        indexcell = j;
+                    }
+                }
+                normalize = Float.valueOf(0);
+
+            }
+
+        }
+
     }
 }
