@@ -1,21 +1,19 @@
 package com.example.example4;
+//package com.example.myapplication2;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Random;
 import java.util.List;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -28,6 +26,12 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.lang.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Set;
+
 
 /**
  * Smart Phone Sensing Example 4. Wifi received signal strength.
@@ -45,7 +49,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     /**
      * The button.
      */
-    private Button buttonRssi;
+    private Button buttonRssi, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9, cell10, cell11, cell12, cell13, cell14, cell15, cell16;
     /**
      * Training data
      */
@@ -60,7 +64,10 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     Map<String, Map<Integer, Float[]>> matrix = new HashMap<String, Map<Integer, Float[]>>();
 
     Integer lengthPmf= 0;
-    private Object AgeComparator;
+    int indexcell = 0;
+    int lastcell = 0;
+
+
 
 
     @Override
@@ -71,6 +78,24 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         // Create items.
         textRssi = (TextView) findViewById(R.id.textRSSI);
         buttonRssi = (Button) findViewById(R.id.buttonRSSI);
+        cell1 = (Button) findViewById(R.id.cell1);
+        cell2 = (Button) findViewById(R.id.cell2);
+        cell3 = (Button) findViewById(R.id.cell3);
+        cell4 = (Button) findViewById(R.id.cell4);
+        cell5 = (Button) findViewById(R.id.cell5);
+        cell6 = (Button) findViewById(R.id.cell6);
+        cell7 = (Button) findViewById(R.id.cell7);
+        cell8 = (Button) findViewById(R.id.cell8);
+        cell9 = (Button) findViewById(R.id.cell9);
+        cell10 = (Button) findViewById(R.id.cell10);
+        cell11 = (Button) findViewById(R.id.cell11);
+        cell12 = (Button) findViewById(R.id.cell12);
+        cell13 = (Button) findViewById(R.id.cell13);
+        cell14 = (Button) findViewById(R.id.cell14);
+        cell15 = (Button) findViewById(R.id.cell15);
+        cell16 = (Button) findViewById(R.id.cell16);
+
+
         // Set listener for the button.
         buttonRssi.setOnClickListener(this);
 
@@ -82,7 +107,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                         (
                                 Environment.DIRECTORY_DOWNLOADS
                         );
-        File file = new File(path, "MyFileFiltered.txt");
+        File file = new File(path, "MyFile.txt");
 
         BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -210,18 +235,18 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             //Log.e("numberRow", String.valueOf(j));
 
 
-                // Write results to a label
-                for ( String scanResult : temp) {
+            // Write results to a label
+            for ( String scanResult : temp) {
 
-                    fos.write(scanResult.getBytes());
-                    fos.write("\n".getBytes());
-                    Log.e("leve", lev.get(k).toString());
-                    fos.write(lev.get(k).toString().getBytes());
-                    fos.write("\n".getBytes());
+                fos.write(scanResult.getBytes());
+                fos.write("\n".getBytes());
+                Log.e("leve", lev.get(k).toString());
+                fos.write(lev.get(k).toString().getBytes());
+                fos.write("\n".getBytes());
 
-                    k++;
+                k++;
 
-                }
+            }
 
 
 
@@ -262,8 +287,8 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         Float[] normalized = new Float[]{
                 (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0
         };
-
-
+        
+        lastcell=indexcell;
         //here is where we create dictionary
         try {
             readFromFile2();
@@ -276,7 +301,6 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         // Start a wifi scan.
         wifiManager.startScan();
-
 
         //STATIC DATA
 /*
@@ -528,7 +552,7 @@ end paralell
         //scanResults SORTED by level, now BAYES:
 
         Float normalize = (float) 0;
-        Integer indexcell = 0;
+
 
 
         for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
@@ -578,5 +602,152 @@ end paralell
 
         }
 
+
+        //indexcell= new Random().nextInt(16) + 1;
+        //indexcell++;
+        switch (lastcell) {
+            // cell 1
+            case 1: {
+                cell1.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 2: {
+                cell2.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 3: {
+                cell3.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 4: {
+                cell4.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 5: {
+                cell5.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 6: {
+                cell6.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 7: {
+                cell7.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 8: {
+                cell8.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 9: {
+                cell9.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 10: {
+                cell10.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 11: {
+                cell11.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 12: {
+                cell12.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 13: {
+                cell13.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 14: {
+                cell14.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 15: {
+                cell15.setBackgroundColor(Color.GRAY);
+                break;
+            }
+            case 16: {
+                cell16.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
+            case 0:{
+               // Toast.makeText(MainActivity.this, "Not Found", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+
+        switch (indexcell) {
+            // cell 1
+            case 1: {
+                cell1.setBackgroundColor(Color.RED);
+                //cell1.setBackground(Drawable.createFromPath("@drawable/my_button_bg"));
+                break;
+            }
+            case 2: {
+                cell2.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 3: {
+                cell3.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 4: {
+                cell4.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 5: {
+                cell5.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 6: {
+                cell6.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 7: {
+                cell7.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 8: {
+                cell8.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 9: {
+                cell9.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 10: {
+                cell10.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 11: {
+                cell11.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 12: {
+                cell12.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 13: {
+                cell13.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 14: {
+                cell14.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 15: {
+                cell15.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 16: {
+                cell16.setBackgroundColor(Color.RED);
+                break;
+            }
+            case 0:{
+
+                Toast.makeText(MainActivity.this, "Not Found", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
