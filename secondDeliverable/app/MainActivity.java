@@ -1,19 +1,21 @@
 package com.example.example4;
-//package com.example.myapplication2;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Random;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import android.app.Activity;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -26,12 +28,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.lang.*;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Set;
-
+import java.util.concurrent.TimeUnit;
 
 /**
  * Smart Phone Sensing Example 4. Wifi received signal strength.
@@ -49,7 +46,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     /**
      * The button.
      */
-    private Button buttonRssi, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9, cell10, cell11, cell12, cell13, cell14, cell15, cell16;
+    private Button buttonRssi;
     /**
      * Training data
      */
@@ -64,10 +61,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
     Map<String, Map<Integer, Float[]>> matrix = new HashMap<String, Map<Integer, Float[]>>();
 
     Integer lengthPmf= 0;
-    int indexcell = 0;
-    int lastcell = 0;
-
-
+    private Object AgeComparator;
 
 
     @Override
@@ -78,24 +72,6 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         // Create items.
         textRssi = (TextView) findViewById(R.id.textRSSI);
         buttonRssi = (Button) findViewById(R.id.buttonRSSI);
-        cell1 = (Button) findViewById(R.id.cell1);
-        cell2 = (Button) findViewById(R.id.cell2);
-        cell3 = (Button) findViewById(R.id.cell3);
-        cell4 = (Button) findViewById(R.id.cell4);
-        cell5 = (Button) findViewById(R.id.cell5);
-        cell6 = (Button) findViewById(R.id.cell6);
-        cell7 = (Button) findViewById(R.id.cell7);
-        cell8 = (Button) findViewById(R.id.cell8);
-        cell9 = (Button) findViewById(R.id.cell9);
-        cell10 = (Button) findViewById(R.id.cell10);
-        cell11 = (Button) findViewById(R.id.cell11);
-        cell12 = (Button) findViewById(R.id.cell12);
-        cell13 = (Button) findViewById(R.id.cell13);
-        cell14 = (Button) findViewById(R.id.cell14);
-        cell15 = (Button) findViewById(R.id.cell15);
-        cell16 = (Button) findViewById(R.id.cell16);
-
-
         // Set listener for the button.
         buttonRssi.setOnClickListener(this);
 
@@ -107,7 +83,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                         (
                                 Environment.DIRECTORY_DOWNLOADS
                         );
-        File file = new File(path, "MyFile.txt");
+        File file = new File(path, "MyFileMod.txt");
 
         BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -235,18 +211,18 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             //Log.e("numberRow", String.valueOf(j));
 
 
-            // Write results to a label
-            for ( String scanResult : temp) {
+                // Write results to a label
+                for ( String scanResult : temp) {
 
-                fos.write(scanResult.getBytes());
-                fos.write("\n".getBytes());
-                Log.e("leve", lev.get(k).toString());
-                fos.write(lev.get(k).toString().getBytes());
-                fos.write("\n".getBytes());
+                    fos.write(scanResult.getBytes());
+                    fos.write("\n".getBytes());
+                    Log.e("leve", lev.get(k).toString());
+                    fos.write(lev.get(k).toString().getBytes());
+                    fos.write("\n".getBytes());
 
-                k++;
+                    k++;
 
-            }
+                }
 
 
 
@@ -259,8 +235,20 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
         }
     }
+    Handler mHandler;
+    public void useHandler() {
+        mHandler = new Handler();
+        mHandler.postDelayed(mRunnable, 8000);
+    }
 
+    private Runnable mRunnable = new Runnable() {
 
+        @Override
+        public void run() {
+            textRssi.setText("\n\tScan all access points:");
+            mHandler.postDelayed(mRunnable, 8000);
+        }
+    };
 
 
     // onResume() registers the accelerometer for listening the events
@@ -287,23 +275,143 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
         Float[] normalized = new Float[]{
                 (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0, (float) 0
         };
-        
-        lastcell=indexcell;
+
+        // Set text.
+        textRssi.setText("\n\tScan all access points:");
         //here is where we create dictionary
         try {
             readFromFile2();
         } catch (IOException e) {
             e.printStackTrace();
+
         }
-        // Set text.
-        textRssi.setText("\n\tScan all access points:");
-        // Set wifi manager.
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        // Start a wifi scan.
+
+
+            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        //DYNAMIC DATA: after wifi scan
         wifiManager.startScan();
+        // Store results in a list.
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+
+        //useHandler();
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+
+        wifiManager.startScan();
+        List<ScanResult> list2 = wifiManager.getScanResults();
+
+        scanResults.addAll(list2);
+
+        //useHandler();
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        wifiManager.startScan();
+        List<ScanResult> list3 = wifiManager.getScanResults();
+
+        scanResults.addAll(list3);
+
+
+        //ordering results
+        HashMap<String, Integer> codenames = new HashMap<String, Integer>();
+
+
+        for (ScanResult scanResult : scanResults) {
+            codenames.put(scanResult.BSSID, scanResult.level);
+        }
+
+        Set<Map.Entry<String, Integer>> entries = codenames.entrySet();
+
+        // inspired by Read more: http://www.java67.com/2015/01/how-to-sort-hashmap-in-java-based-on.html#ixzz5oxgKKgRo
+        Comparator<Map.Entry<String, Integer>> valueComparator = new Comparator<Map.Entry<String, Integer>>() {
+
+            @Override
+            public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
+                Integer v1 = e1.getValue();
+                Integer v2 = e2.getValue();
+                return v2.compareTo(v1);
+            }
+        };
+
+        List<Map.Entry<String, Integer>> listOfEntries = new ArrayList<Map.Entry<String, Integer>>(entries);
+
+        // sorting HashMap by values using comparator
+        Collections.sort(listOfEntries, valueComparator);
+
+        LinkedHashMap<String, Integer> sortedByValue = new LinkedHashMap<String, Integer>(listOfEntries.size());
+
+        // copying entries from List to Map
+        for (Map.Entry<String, Integer> entry : listOfEntries) {
+            sortedByValue.put(entry.getKey(), entry.getValue());
+        }
+
+        //scanResults SORTED by level, now BAYES:
+
+        Float normalize = (float) 0;
+        Integer indexcell = 0;
+
+
+        for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
+
+            Float[] arr = new Float[16];
+
+            if (matrix.get(entryScan.getKey()) != null) {
+
+                Map<Integer, Float[]> temp = matrix.get(entryScan.getKey());
+                Integer index = (-entryScan.getValue() - 38);
+                Boolean check = false;
+
+                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
+                    Integer c = (Integer) temp.keySet().toArray()[counter];
+                    arr[c - 1] = entry.getValue()[index];
+                    if (arr[c - 1] != 0) {
+                        check = true;
+                    }
+                    counter = counter + 1;
+                }
+
+
+                prob_cells = new Float[]{
+                        (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16
+                };
+
+                for (int ii = 0; ii < arr.length; ii++) {
+                    prob_cells[ii] *= arr[ii];
+                    posteriorFinal[ii] = posteriorFinal[ii]+prob_cells[ii];
+                    //normalize = normalize + posteriorFinal[ii]; //we start adding values of normalization
+                }
+
+                counter = 0;
+                for (int j = 0; j < posteriorFinal.length; j++){
+                    normalize = normalize + posteriorFinal[j];
+                }
+                for (int j = 0; j < posteriorFinal.length; j++) {
+                    normalized[j] = posteriorFinal[j]/ normalize;
+                    if (normalized[j] > maxprob) {
+                        maxprob = normalized[j];
+                        indexcell = j;
+                    }
+                }
+                normalize = Float.valueOf(0);
+
+            }
+
+        }
+
+
+
+/*
 
         //STATIC DATA
-/*
+
         int pos=0;
         int counter = 0;
 
@@ -314,7 +422,7 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                         (
                                 Environment.DIRECTORY_DCIM + "/Camera/"
                         );
-        File file = new File(path, "BSSIDS10:45:28.txt");
+        File file = new File(path, "BSSIDS10:40:55.txt");
 
         BufferedReader br = null;
         try {
@@ -352,10 +460,12 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             }
 
             linees = linees+1;
-            if (linees>60){
+            if (linees>600){
                 break;
             }
         }
+
+
 
         Set<Map.Entry<String, Integer>> entries = codenames.entrySet();
 
@@ -383,13 +493,13 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             sortedByValue.put(entry.getKey(), entry.getValue());
         }
 
-        */
+
+*/
 
 
 
-
-/* start SERIAL!!!!
-
+// start SERIAL!!!!
+/*
         for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
 
                 Float[] arr = new Float[16];
@@ -436,11 +546,13 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
                 }
                 counter = 0;
             }
+*/
 
-
-// end SERIAL!!! */
-        /* start PARALELL
+// end SERIAL!!!
+        //start PARALELL
         //paralell processing
+        /*
+
         Float normalize = (float) 0;
         Integer indexcell = 0;
 
@@ -505,249 +617,17 @@ public class MainActivity<pmf> extends Activity implements OnClickListener {
             // cell choosen
             textRssi.setText("\n\tScan all access points:" + indexcell);
         }
-
-end paralell
-
-        */
+*/
 
 
-        //DYNAMIC DATA: after wifi scan
-
-        // Store results in a list.
-        List<ScanResult> scanResults = wifiManager.getScanResults();
-
-        //ordering results
-        HashMap<String, Integer> codenames = new HashMap<String, Integer>();
-
-
-        for (ScanResult scanResult : scanResults) {
-            codenames.put(scanResult.BSSID, scanResult.level);
-        }
-
-        Set<Map.Entry<String, Integer>> entries = codenames.entrySet();
-
-        // inspired by Read more: http://www.java67.com/2015/01/how-to-sort-hashmap-in-java-based-on.html#ixzz5oxgKKgRo
-        Comparator<Map.Entry<String, Integer>> valueComparator = new Comparator<Map.Entry<String, Integer>>() {
-
-            @Override
-            public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2) {
-                Integer v1 = e1.getValue();
-                Integer v2 = e2.getValue();
-                return v2.compareTo(v1);
-            }
-        };
-
-        List<Map.Entry<String, Integer>> listOfEntries = new ArrayList<Map.Entry<String, Integer>>(entries);
-
-        // sorting HashMap by values using comparator
-        Collections.sort(listOfEntries, valueComparator);
-
-        LinkedHashMap<String, Integer> sortedByValue = new LinkedHashMap<String, Integer>(listOfEntries.size());
-
-        // copying entries from List to Map
-        for (Map.Entry<String, Integer> entry : listOfEntries) {
-            sortedByValue.put(entry.getKey(), entry.getValue());
-        }
-
-        //scanResults SORTED by level, now BAYES:
-
-        Float normalize = (float) 0;
+//end paralell
 
 
 
-        for (Map.Entry<String, Integer> entryScan : sortedByValue.entrySet()) {
-
-            Float[] arr = new Float[16];
-
-            if (matrix.get(entryScan.getKey()) != null) {
-
-                Map<Integer, Float[]> temp = matrix.get(entryScan.getKey());
-                Integer index = (-entryScan.getValue() - 38);
-                Boolean check = false;
-
-                for (Map.Entry<Integer, Float[]> entry : temp.entrySet()) {
-                    Integer c = (Integer) temp.keySet().toArray()[counter];
-                    arr[c - 1] = entry.getValue()[index];
-                    if (arr[c - 1] != 0) {
-                        check = true;
-                    }
-                    counter = counter + 1;
-                }
 
 
-                prob_cells = new Float[]{
-                        (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16, (float) 1 / 16
-                };
-
-                for (int ii = 0; ii < arr.length; ii++) {
-                    prob_cells[ii] *= arr[ii];
-                    posteriorFinal[ii] = posteriorFinal[ii]+prob_cells[ii];
-                    //normalize = normalize + posteriorFinal[ii]; //we start adding values of normalization
-                }
-
-                counter = 0;
-                for (int j = 0; j < posteriorFinal.length; j++){
-                    normalize = normalize + posteriorFinal[j];
-                }
-                for (int j = 0; j < posteriorFinal.length; j++) {
-                    normalized[j] = posteriorFinal[j]/ normalize;
-                    if (normalized[j] > maxprob) {
-                        maxprob = normalized[j];
-                        indexcell = j;
-                    }
-                }
-                normalize = Float.valueOf(0);
-
-            }
-
-        }
 
 
-        //indexcell= new Random().nextInt(16) + 1;
-        //indexcell++;
-        switch (lastcell) {
-            // cell 1
-            case 1: {
-                cell1.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 2: {
-                cell2.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 3: {
-                cell3.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 4: {
-                cell4.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 5: {
-                cell5.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 6: {
-                cell6.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 7: {
-                cell7.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 8: {
-                cell8.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 9: {
-                cell9.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 10: {
-                cell10.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 11: {
-                cell11.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 12: {
-                cell12.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 13: {
-                cell13.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 14: {
-                cell14.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 15: {
-                cell15.setBackgroundColor(Color.GRAY);
-                break;
-            }
-            case 16: {
-                cell16.setBackgroundColor(Color.TRANSPARENT);
-                break;
-            }
-            case 0:{
-               // Toast.makeText(MainActivity.this, "Not Found", Toast.LENGTH_SHORT).show();
-            }
-        }
 
-
-        switch (indexcell) {
-            // cell 1
-            case 1: {
-                cell1.setBackgroundColor(Color.RED);
-                //cell1.setBackground(Drawable.createFromPath("@drawable/my_button_bg"));
-                break;
-            }
-            case 2: {
-                cell2.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 3: {
-                cell3.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 4: {
-                cell4.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 5: {
-                cell5.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 6: {
-                cell6.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 7: {
-                cell7.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 8: {
-                cell8.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 9: {
-                cell9.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 10: {
-                cell10.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 11: {
-                cell11.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 12: {
-                cell12.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 13: {
-                cell13.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 14: {
-                cell14.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 15: {
-                cell15.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 16: {
-                cell16.setBackgroundColor(Color.RED);
-                break;
-            }
-            case 0:{
-
-                Toast.makeText(MainActivity.this, "Not Found", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 }
