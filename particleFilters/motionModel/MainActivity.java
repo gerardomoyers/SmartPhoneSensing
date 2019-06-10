@@ -15,7 +15,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -29,6 +31,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.hardware.GeomagneticField;
+
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -77,6 +82,7 @@ public class MainActivity extends Activity implements OnClickListener {
     private Sensor senStepDetector;
     private Sensor senRotation;
     private Sensor mag;
+    private Sensor mRotationSensor;
 
     int stepsTaken;
     int reportedSteps;
@@ -96,16 +102,37 @@ public class MainActivity extends Activity implements OnClickListener {
     float[] iMat = new float[9];
     float[] gData = new float[3]; // accelerometer
     float[] mData = new float[3]; // magnetometer
-    private int mAzimuth = 0; // degree
+    private float mAzimuth = 0; // degree
+    private float mAzimuthInitial = 0;
     float[] orientation = new float[3];
+    double offset;
+    double realAngle = 0;
+
+    @Nullable
+    private Rotation calibrationDirection;
+    @Nullable
+    private Rotation latestDirection;
+
+
+    List<Double> x = new ArrayList<Double>();
+    List<Double> y = new ArrayList<Double>();
+
+    Double[] xUpdated = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+    Double[] yUpdated = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+
+
+
 
     final SensorEventListener thiss = new SensorEventListener() {
+
+
 
 
         @Override
         public void onSensorChanged(SensorEvent event) {
 
             Sensor sensor = event.sensor;
+            int numm = 1000;
 
             // Perform differing functionality depending upon
             // the sensor type (caller)
@@ -137,7 +164,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
                     stepsTaken = (int) event.values[0] - reportedSteps;
                     //lastSteps = stepsTaken;
-                    showToast("result" + stepsTaken);
+                    //showToast("result" + stepsTaken);
 
                     // Output the value to the simple GUI
                     //showToast("Cnt: " + stepsTaken);
@@ -149,12 +176,22 @@ public class MainActivity extends Activity implements OnClickListener {
 
                 case Sensor.TYPE_STEP_DETECTOR:
 
+                    new CountDownTimer(20000, 1000) {
+
+                        public void onTick(long millisUntilFinished) {
+                        }
+
+                        public void onFinish() {
+                            stepDetector = 0;
+                        }
+                    }.start();
+
 
                     // Increment the step detector count
 
 
                     stepDetector++;
-                    showToast("Det: " + stepDetector);
+                    //showToast("Det: " + stepDetector);
                     // Output the value to the simple GUI
 
 
@@ -182,12 +219,75 @@ public class MainActivity extends Activity implements OnClickListener {
                     break;
 
 
+                case Sensor.TYPE_ROTATION_VECTOR:
+//                    if (event.values.length > 4) {
+//                        float[] truncatedRotationVector = new float[4];
+//                        System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+//                        update(truncatedRotationVector);
+//                    } else {
+//                        update(event.values);
+//                    }
+
+
+                    Rotation rotation = new Rotation(
+                            (double) event.values[3], // quaternion scalar
+                            (double) event.values[0], // quaternion x
+                            (double) event.values[1], // quaternion y
+                            (double) event.values[2], // quaternion z
+                            false); // no need to normalise
+
+                    if (calibrationDirection == null) {
+                        // Save the first sensor value obtained as the calibration value
+                        calibrationDirection = rotation;
+                        if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
+
+                            Float azz = SensorManager.getOrientation(rMat, orientation)[0];
+
+                            mAzimuthInitial = (float) ((Math.toDegrees(azz) + 360) % 360.0);
+
+                            Log.e("this", "" + mAzimuth);
+                        }
+
+                    } else {
+                        // Apply the reverse of the calibration direction to the newly
+                        //  obtained direction to obtain the direction the user is facing
+                        //  relative to his/her original direction
+                        latestDirection = calibrationDirection.applyInverseTo(rotation);
+                        double value = latestDirection.getAngles(RotationOrder.XYX)[1] * 360;
+
+                        if (value > 1040) {
+                            value = 1040;
+                        }
+                        if (value < 40) {
+                            value = 40;
+                        }
+                        double resize = (value - 40) * (360 - 0) / (double) (1040 - 40) + 0.0;
+
+                        if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
+
+                            Float azz = SensorManager.getOrientation(rMat, orientation)[0];
+
+                            mAzimuth = (float) ((Math.toDegrees(azz) + 360) % 360.0);
+
+                        }
+
+
+
+                        if (mAzimuth > mAzimuthInitial || mAzimuth <90) {
+                            realAngle = -resize / 2.0; //rotating CW
+                        } else if (mAzimuth < mAzimuthInitial) {
+                            realAngle = resize / 2.0;
+                        }
+                        Log.e("here", ""+mAzimuth);
+                        //realAngle = mAzimuth-mAzimuthInitial;
+                        Log.e("trial", "" + realAngle);
+                    }
+
+                    break;
 
 
             }
         }
-
-
 
 
         @Override
@@ -197,6 +297,46 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
     };
+
+
+
+public void update(float[] vectors) {
+
+        final int FROM_RADS_TO_DEGS = -57;
+        float[] rotationMatrix = new float[9];
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
+        int worldAxisX = SensorManager.AXIS_X;
+        int worldAxisZ = SensorManager.AXIS_Z;
+        float[] adjustedRotationMatrix = new float[9];
+        SensorManager.remapCoordinateSystem(rotationMatrix, worldAxisX, worldAxisZ, adjustedRotationMatrix);
+        float[] orientation = new float[3];
+        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
+        float yaw = orientation[2] * FROM_RADS_TO_DEGS;
+
+        Log.e("here","yawInside"+yaw);
+        };
+
+
+    public void StdGaussian() {
+
+            double r, x, y;
+
+            // find a uniform random point (x, y) inside unit circle
+            do {
+                x = 2.0 * Math.random() - 1.0;
+                y = 2.0 * Math.random() - 1.0;
+                r = x*x + y*y;
+            } while (r > 1 || r == 0);    // loop executed 4 / pi = 1.273.. times on average
+            // http://en.wikipedia.org/wiki/Box-Muller_transformshow
+
+
+            // apply the Box-Muller formula to get standard Gaussian z
+            offset = x * Math.sqrt(-2.0 * Math.log(r) / r);
+
+            // print it to standard output
+
+    };
+
 
 
 
@@ -328,10 +468,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 */
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -340,6 +476,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final int SENSOR_DELAY = 500 * 1000; // 500ms
+
 
 
         // set the buttons
@@ -388,9 +527,9 @@ public class MainActivity extends Activity implements OnClickListener {
         senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-        senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         mag = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
+        mRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         // Register the sensors for event callback
 
         showToast("Registering sensors!");
@@ -398,14 +537,24 @@ public class MainActivity extends Activity implements OnClickListener {
         // Register the listeners. Used for receiving notifications from
         // the SensorManager when sensor values have changed.
 
-        sensorManager.registerListener(thiss, senStepCounter, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(thiss, senStepCounter, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senStepDetector, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(thiss, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(thiss, mag, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(thiss, mag, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(thiss, mRotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        for (int i=0 ; i<5 ; i++) {
+            x.add((double) 0);
+            y.add((double) 0);
+            xUpdated[i] = (double) 0;
+            yUpdated[i] = (double) 0;
+        }
 
 
     }
+
+
 
 
     @Override
@@ -420,9 +569,19 @@ public class MainActivity extends Activity implements OnClickListener {
         int altitude = 0;
         int time = 0;
         float maybe = 0;
+        double floatBearing = 0;
 
         if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
-            mAzimuth = (int) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) + 360);
+
+            Float azz = SensorManager.getOrientation(rMat, orientation)[0];
+
+            mAzimuth = (float) ((Math.toDegrees(azz)+ 360) % 360.0);
+
+
+
+            Log.e("this", ""+mAzimuth);
+
+            /*
             GeomagneticField geo = new GeomagneticField((float) startLat, (float) startLon, altitude, time);
             float decl = geo.getDeclination();
 
@@ -435,6 +594,17 @@ public class MainActivity extends Activity implements OnClickListener {
             }
 
 
+            floatBearing = orientation[0];
+            floatBearing = Math.toDegrees(floatBearing);
+            if (geo != null)
+                floatBearing += geo.getDeclination();
+            if (floatBearing < 0)
+                floatBearing += 360;
+        context = this;
+
+
+
+
 
         }
 
@@ -442,11 +612,38 @@ public class MainActivity extends Activity implements OnClickListener {
         Log.e("hihi", "hey");
         Log.e("hihi", "hey"+mAzimuth);
         Log.e("second trial", "h"+maybe);
+        Log.e("third", "j"+floatBearing);
 
         //showToast("Here"+mAzimuth);
+*/
+            //calculate distance
+            floatBearing = 0;
 
-        //calculate distance
 
+            Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+
+            //where was I? use of x and y
+            //gauss = noise
+
+            for (int j = 0; j < 5; j++) {
+                StdGaussian();
+                double div = offset / 10.0;
+                distance[j] = stepDetector * (1.65 * 0.4 + div);
+                showToast("I moved in magnitude"+ distance[j]);
+            }
+
+            for (int i = 0; i < 5; i++) {
+                xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
+                yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
+
+                showToast("x: "+ xUpdated[i]);
+                showToast("y: "+ yUpdated[i]);
+
+            }
+
+//        showToast("angle: " +floatBearing);
+//        showToast("two"+ mAzimuth);
+//        showToast("tre"+maybe);
 
 
 //        switch (v.getId()) {
@@ -493,6 +690,7 @@ public class MainActivity extends Activity implements OnClickListener {
 //        drawable.draw(canvas);
 //        for(ShapeDrawable wall : walls)
 //            wall.draw(canvas);
+        }
     }
 
     @Override
