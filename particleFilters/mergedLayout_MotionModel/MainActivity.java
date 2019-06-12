@@ -519,17 +519,19 @@ public class MainActivity extends Activity implements OnClickListener {
                     StdGaussian();
                     double div = offset / 10.0;
                     distance[j] = stepDetector * (1.65 * 0.4 + div);
-                    showToast("I moved in magnitude" + distance[j]);
+                    
                 }
-
+                showToast("I moved in magnitude" + distance[0]);
                 for (int i = 0; i < 5; i++) {
                     xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
                     yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
 
-                    showToast("x: " + xUpdated[i]);
-                    showToast("y: " + yUpdated[i]);
+                    
 
                 }
+                
+                showToast("x: " + xUpdated[0]);
+                showToast("y: " + yUpdated[0]);
 
 
 
