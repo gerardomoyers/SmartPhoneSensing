@@ -52,6 +52,7 @@ public class MainActivity extends Activity implements OnClickListener {
      * The shape.
      */
     private ArrayList<ArrayList<ShapeDrawable>> drawable, drawablebefore;
+    private ShapeDrawable me;
     /**
      * The canvas.
      */
@@ -96,28 +97,32 @@ public class MainActivity extends Activity implements OnClickListener {
         int height = size.y;
         int ch = (int)  (height * 0.276) + 1;
         int cw = (int)  (width * 0.276) + 1;
-        int roomwidth = (int) ((width - cw) * 0.42666); // 460
-        int roomheight = (int) ((height - ch)  * 0.05555);  // 77
+        int roomwidth = (int) ((width - cw) * 0.42666); //
+        int roomheight = (int) ((height - ch)  * 0.05555);  //
         ch-=20;
         cw/=2;
 
 
         // create a drawable object
+        me = new ShapeDrawable(new OvalShape());
+        me.getPaint().setColor(Color.RED);
+        me.setBounds(width/2-10, height/2-10, width/2+10, height/2+10);
         drawable = new ArrayList<ArrayList<ShapeDrawable>>();
         drawablebefore = new ArrayList<ArrayList<ShapeDrawable>>();
+
         probability = new ArrayList<ArrayList<Integer>>();
         resampling = 0;
         maxprob = 1;
-        convergence = (float) 0.1;
+        convergence = (float) 0.15;
 
-        for (int fy = 40; fy < roomheight * 18 ; fy += 30 ){
+        for (int fy = 40; fy < roomheight * 18 ; fy += 15 ){
   //      for (int fy = 600; fy < roomheight * 16 + 20; fy += 20 ){
             ArrayList<ShapeDrawable> dotx = new ArrayList<>();
             ArrayList<ShapeDrawable> dotxb = new ArrayList<>();
             ArrayList<Integer> probx = new ArrayList<>();
 //            for (int fx = roomwidth/2; fx < width - roomwidth/2; fx += 20){
 
-            for (int fx = cw; fx < width-cw; fx += 30){
+            for (int fx = cw; fx < width-cw; fx += 15){
                 ShapeDrawable dot = new ShapeDrawable(new OvalShape());
                 ShapeDrawable dotb = new ShapeDrawable(new OvalShape());
                 dot.getPaint().setColor(Color.BLUE);
@@ -194,7 +199,7 @@ public class MainActivity extends Activity implements OnClickListener {
         canvasView.setImageBitmap(blankBitmap);
 
         // draw the objects
-
+            me.draw(canvas);
         for (int fy = 0; fy < drawable.size(); fy ++){
             for(ShapeDrawable dots : drawable.get(fy))
                 dots.draw(canvas);
@@ -237,6 +242,8 @@ public class MainActivity extends Activity implements OnClickListener {
         switch (v.getId()) {
             // UP BUTTON
             case R.id.button1: {
+                Rect r2 = me.getBounds();
+                me.setBounds(r2.left,r2.top-20,r2.right,r2.bottom-20);
                 for(int fy=0; fy < drawable.size(); fy++){
                     for (int fx=0; fx < drawable.get(fy).size(); fx++){
                         Rect r =  new Rect(drawable.get(fy).get(fx).getBounds());
@@ -253,6 +260,8 @@ public class MainActivity extends Activity implements OnClickListener {
             }
             // DOWN BUTTON
             case R.id.button4: {
+                Rect r2 = me.getBounds();
+                me.setBounds(r2.left,r2.top+20,r2.right,r2.bottom+20);
                 for(int fy=0; fy < drawable.size(); fy++){
                     for (int fx=0; fx < drawable.get(fy).size(); fx++){
                         Rect r =  new Rect(drawable.get(fy).get(fx).getBounds());
@@ -268,6 +277,8 @@ public class MainActivity extends Activity implements OnClickListener {
             }
             // LEFT BUTTON
             case R.id.button2: {
+                Rect r2 = me.getBounds();
+                me.setBounds(r2.left-20,r2.top,r2.right-20,r2.bottom);
                 for(int fy=0; fy < drawable.size(); fy++){
                     for (int fx=0; fx < drawable.get(fy).size(); fx++){
                         Rect r =  new Rect(drawable.get(fy).get(fx).getBounds());
@@ -284,6 +295,8 @@ public class MainActivity extends Activity implements OnClickListener {
             }
             // RIGHT BUTTON
             case R.id.button3: {
+                Rect r2 = me.getBounds();
+                me.setBounds(r2.left+20,r2.top,r2.right+20,r2.bottom);
                 for(int fy=0; fy < drawable.size(); fy++){
                     for (int fx=0; fx < drawable.get(fy).size(); fx++){
                         Rect r =  new Rect(drawable.get(fy).get(fx).getBounds());
@@ -303,17 +316,21 @@ public class MainActivity extends Activity implements OnClickListener {
         if (isCollision()){
            int countersafe=0;
             for(int fy=0; fy < drawable.size(); fy++) {
+                int maximumfx = 0;
                 for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                    if (maximumfx < drawable.get(fy).size()) maximumfx=drawable.get(fy).size();
                     for(ShapeDrawable wall : walls) {
                         if (isCollision(wall, drawable.get(fy).get(fx),drawablebefore.get(fy).get(fx))){
                             int fxr = 0;
                             int fyr =0;
                             probability.get(fy).set(fx,0);
                             boolean reshape = true;
+
                             while(reshape == true){
 
                                 fyr = new Random().nextInt(drawable.size());
-                                fxr = new Random().nextInt(drawable.get(0).size());
+                                fxr = new Random().nextInt(drawable.get(fyr).size());
+                                if (maximumfx < drawable.get(fyr).size()) maximumfx=drawable.get(fyr).size();
                                 for(ShapeDrawable wall2 : walls) {
                                     if (isCollision(wall2, drawable.get(fyr).get(fxr),drawablebefore.get(fyr).get(fxr))) {
                                         reshape=true;
@@ -323,7 +340,7 @@ public class MainActivity extends Activity implements OnClickListener {
                                         reshape=false;
                                     }
                                 }
-                                if (countersafe > drawable.size()*drawable.get(fy).size()){
+                                if (countersafe > drawable.size()*maximumfx){
                                     fxr=fx;
                                     fyr=fy;
                                     break;
@@ -354,12 +371,11 @@ public class MainActivity extends Activity implements OnClickListener {
         if (resampling >= 10){
             Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
             if (convergence <= 0.5){
-                convergence+= 0.1;
+                convergence+= 0.03;
             }
             int tempmaxprob = maxprob;
             maxprob = 1;
             for (int fy = 0; fy < drawable.size(); fy ++ ){
-                int sizex = drawable.get(fy).size();
                 for (int fx = 0; fx < drawable.get(fy).size(); fx ++){
                     int fyr = 0;
                     int fxr = 0;
@@ -374,34 +390,47 @@ public class MainActivity extends Activity implements OnClickListener {
                     }else{
                         do {
                             fyr = new Random().nextInt(drawable.size());
-                            fxr = new Random().nextInt(drawable.get(fy).size());
+                            fxr = new Random().nextInt(drawable.get(fyr).size());
                         }while (probability.get(fyr).get(fxr)  < tempmaxprob*convergence);
 
-                      /*  if (convergence <= 0.4){
+                        if (convergence <= 0.2){
                             if (fx > drawable.get(fy).size()) break;
                             probability.get(fy).remove(fx);
                             drawablebefore.get(fy).remove(fx);
                             drawable.get(fy).remove(fx);
+                            if(drawable.get(fy).size()== 0){
+                                drawable.remove(fy);
+                                fy--;
+                                break;
+                            }
                             fx--;
                         }else{
-                        */    probability.get(fy).set(fx,0);
+                          probability.get(fy).set(fx,0);
                             r = drawable.get(fyr).get(fxr).getBounds();
                             drawable.get(fy).get(fx).setBounds(r.left,r.top,r.right,r.bottom);
                             drawablebefore.get(fy).get(fx).setBounds(r.left,r.top,r.right,r.bottom);
                             Integer dummy = probability.get(fyr).get(fxr);
                             dummy++;
                             probability.get(fyr).set(fxr, dummy);
-                            if (probability.get(fyr).get(fxr) > maxprob)
-                                maxprob = probability.get(fyr).get(fxr);
-                        //}
+                            //if (probability.get(fyr).get(fxr) > maxprob)
+                              //  maxprob = probability.get(fyr).get(fxr);
+                        }
                     }
                 }
             }
             resampling = 0;
+            maxprob = 1;
+            for (int fy = 0; fy < drawable.size(); fy ++ ) {
+                for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                    probability.get(fy).set(fx,1);
+                }
+            }
         }
 
         // redrawing of the object
+
         canvas.drawColor(Color.WHITE);
+        me.draw(canvas);
         for (int fy = 0; fy < drawable.size(); fy ++){
             for(ShapeDrawable dots : drawable.get(fy))
                 dots.draw(canvas);
@@ -417,11 +446,9 @@ public class MainActivity extends Activity implements OnClickListener {
     private boolean isCollision() {
         for(ShapeDrawable wall : walls) {
             for(int fy=0; fy < drawable.size(); fy++)
-                for (int fx=0; fx < drawable.get(0).size(); fx++)
+                for (int fx=0; fx < drawable.get(fy).size(); fx++)
                     if(isCollision(wall,drawable.get(fy).get(fx),drawablebefore.get(fy).get(fx) ))
                         return true;
-                        //return false;
-
         }
         return false;
     }
