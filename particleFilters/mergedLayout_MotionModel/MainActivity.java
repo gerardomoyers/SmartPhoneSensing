@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -80,7 +81,6 @@ public class MainActivity extends Activity implements OnClickListener {
      */
     private List<ShapeDrawable> walls;
 
-
     //start Teresa code
     private Context context;
 
@@ -107,6 +107,7 @@ public class MainActivity extends Activity implements OnClickListener {
     float[] orientation = new float[3];
     double offset;
     double realAngle = 0;
+    boolean start = false;
 
     @Nullable
     private Rotation calibrationDirection;
@@ -119,6 +120,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
     Double[] xUpdated = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
     Double[] yUpdated = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+
+    Double[] xUpdatedScaled = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+    Double[] yUpdatedScaled = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
 
 
     final SensorEventListener thiss = new SensorEventListener() {
@@ -147,31 +151,31 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
                     stepsTaken = (int) event.values[0] - reportedSteps;
+                    //showToast("Det: " + stepsTaken);
 
                     break;
 
                 case Sensor.TYPE_STEP_DETECTOR:
 
-                    new CountDownTimer(20000, 1000) {
-
-                        public void onTick(long millisUntilFinished) {
-                        }
-
-                        public void onFinish() {
-                            stepDetector = 0;
-                        }
-                    }.start();
-
-
                     // Increment the step detector count
 
 
                     stepDetector++;
-                    //showToast("Det: " + stepDetector);
+                    showToast("Det: " + stepDetector);
+
                     // Output the value to the simple GUI
 
 
                     // detectText.setText("Det: " + stepDetector);
+                    if (start) {
+                        moveParticles();
+                    }
+
+                    stepDetector = 0;
+
+
+
+
 
                     break;
 
@@ -243,6 +247,7 @@ public class MainActivity extends Activity implements OnClickListener {
                             realAngle = resize / 2.0;
                         }
                     }
+                    //Log.e("Here", ""+realAngle);
 
                     break;
 
@@ -312,10 +317,10 @@ public class MainActivity extends Activity implements OnClickListener {
         display.getSize(size);
         int width = size.x;
         int height = size.y;
-        int ch = (int)  (height * 0.276) + 1;
-        int cw = (int)  (width * 0.276) + 1;
-        int roomwidth = (int) ((width - cw) * 0.42666); //
-        int roomheight = (int) ((height - ch)  * 0.05555);  //
+        int ch = (int)  (height * 0.2) + 1;
+        int cw = (int)  (width * 0.2) + 1;
+        int roomwidth = (int) ((width - cw) * 0.42666);
+        int roomheight = (int) ((height - ch)  * 0.0909091);
         ch-=20;
         cw/=2;
 
@@ -332,14 +337,14 @@ public class MainActivity extends Activity implements OnClickListener {
         maxprob = 1;
         convergence = (float) 0.15;
 
-        for (int fy = 40; fy < roomheight * 18 ; fy += 15 ){
+        for (int fy = 40; fy < roomheight * 10 ; fy += 115 ){
             //      for (int fy = 600; fy < roomheight * 16 + 20; fy += 20 ){
             ArrayList<ShapeDrawable> dotx = new ArrayList<>();
             ArrayList<ShapeDrawable> dotxb = new ArrayList<>();
             ArrayList<Integer> probx = new ArrayList<>();
 //            for (int fx = roomwidth/2; fx < width - roomwidth/2; fx += 20){
 
-            for (int fx = cw; fx < width-cw; fx += 15){
+            for (int fx = cw; fx < width-cw; fx += 115){
                 ShapeDrawable dot = new ShapeDrawable(new OvalShape());
                 ShapeDrawable dotb = new ShapeDrawable(new OvalShape());
                 dot.getPaint().setColor(Color.BLUE);
@@ -356,58 +361,62 @@ public class MainActivity extends Activity implements OnClickListener {
         }
         walls = new ArrayList<>();
         //bottom rooms
-        for (int i = 0; i < 17; i++){
+        for (int i = 1; i <= 11; i++){
             ShapeDrawable wall_bottom = new ShapeDrawable(new RectShape());
-            if (i >= 15 || i == 11 || i == 10){
-                if (i == 16){
+            if (i >= 10 || i == 5 || i == 6){
+                if (i == 11){
                     ShapeDrawable wall_bottom1 = new ShapeDrawable(new RectShape());
                     ShapeDrawable wall_bottom2 = new ShapeDrawable(new RectShape());
                     ShapeDrawable wall_bottom3 = new ShapeDrawable(new RectShape());
-                    wall_bottom1.setBounds(cw+roomwidth/2, height - i*roomheight - ch, cw+roomwidth, height - ch - 50 - (i-1)* roomheight);
+                    wall_bottom1.setBounds(cw+roomwidth/2, height - i*roomheight - ch, cw+roomwidth, height - ch - 80 - (i-1)* roomheight);
                     walls.add(wall_bottom1);
                     wall_bottom2.setBounds(cw, 20, cw+roomwidth, height - ch - i* roomheight);
                     walls.add(wall_bottom2);
                     wall_bottom3.setBounds(cw, 0-20, width-cw, 20);
                     walls.add(wall_bottom3);
 
+                }else{
+                    ShapeDrawable wall_bottom1 = new ShapeDrawable(new RectShape());
+                    wall_bottom1.setBounds(cw+roomwidth,height-i*roomheight-ch-5,cw+roomwidth+5,height-i*roomheight-ch);
+                    walls.add(wall_bottom1);
                 }
-
                 wall_bottom.setBounds(cw,height - i* roomheight - ch - 10, cw+roomwidth, height - ch - i* roomheight);
+
             }else {
-                wall_bottom.setBounds(cw,height - i* roomheight - 510 - 5, cw+roomwidth, height - ch - i* roomheight);
+                wall_bottom.setBounds(cw,height - i* roomheight - ch - 5, cw+roomwidth, height - ch - i* roomheight);
             }
 
-            if (i < 12 || i > 14 ) {
+            if (i < 1 || i > 10 ) {
+                walls.add(wall_bottom);
+            }
+            if (i == 7){
+                wall_bottom.setBounds(cw,height - 10*roomheight - ch, cw + roomwidth, height - 2*roomheight-ch);
                 walls.add(wall_bottom);
             }
 
-
         }
         // top rooms
-        for (int i = 0; i <= 16; i++){
+        for (int i = 0; i <= 10; i++){
             ShapeDrawable wall_top = new ShapeDrawable(new RectShape());
-            if (i >= 14){
-                wall_top.setBounds(width-cw - roomwidth, i* roomheight + 20 - 10, width-cw, i* roomheight + 20 );
-            }else{
-                wall_top.setBounds(width-cw - roomwidth, i* roomheight + 20 - 5, width-cw, i* roomheight + 20 );
-            }
-            if (i == 16){
+            wall_top.setBounds(width-cw - roomwidth, i* roomheight + 20 - 5, width-cw, i* roomheight + 20 );
+            if (i == 10){
                 ShapeDrawable wall_top1 = new ShapeDrawable(new RectShape());
-                wall_top1.setBounds(cw, height-520, width-cw, height-490 );
+                wall_top1.setBounds(cw, height-ch-roomheight-10, width-cw, height-ch- roomheight+20 );
                 walls.add(wall_top1);
-                wall_top.setBounds(width-cw - roomwidth, (i-1)* roomheight + 20, width-cw, height-510 );
             }
-
-            walls.add(wall_top);
+            if (i<4 || i > 8) walls.add(wall_top);
+            if (i == 7){
+                wall_top.setBounds(width-cw-roomwidth,height-ch-roomheight*8-20, width-cw, height-ch-roomheight*2);
+                walls.add(wall_top);
+            }
         }
+
         ShapeDrawable wallside = new ShapeDrawable(new RectShape());
-        wallside.setBounds(cw-10,0,cw+5,height - 490);
+        wallside.setBounds(cw-10,0,cw+5,height - ch-roomheight);
         ShapeDrawable wallside2 = new ShapeDrawable(new RectShape());
-        wallside2.setBounds(width-cw-5,0,width-cw+10,  height - 490);
+        wallside2.setBounds(width-cw-5,0,width-cw+10,  height - ch - roomheight);
         walls.add(wallside);
         walls.add(wallside2);
-
-
 
         // create a canvas
         ImageView canvasView = (ImageView) findViewById(R.id.canvas);
@@ -424,7 +433,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
         for(ShapeDrawable wall : walls)
             wall.draw(canvas);
-
         //start teresa sensor
 
         Sensor mStepCounterSensor;
@@ -458,8 +466,8 @@ public class MainActivity extends Activity implements OnClickListener {
         // Register the listeners. Used for receiving notifications from
         // the SensorManager when sensor values have changed.
 
-        //sensorManager.registerListener(thiss, senStepCounter, SENSOR_DELAY);
-        sensorManager.registerListener(thiss, senStepDetector, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(thiss, senStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(thiss, mag, SensorManager.SENSOR_DELAY_FASTEST);
@@ -470,6 +478,8 @@ public class MainActivity extends Activity implements OnClickListener {
             y.add((double) 0);
             xUpdated[i] = (double) 0;
             yUpdated[i] = (double) 0;
+            xUpdatedScaled[i] = (double) 0;
+            yUpdatedScaled[i] = (double) 0;
         }
 
         //end Teresa sensor
@@ -496,6 +506,7 @@ public class MainActivity extends Activity implements OnClickListener {
         return super.onOptionsItemSelected(item);
     }
 
+
     @Override
     public void onClick(View v) {
         // This happens when you click any of the four buttons.
@@ -509,6 +520,8 @@ public class MainActivity extends Activity implements OnClickListener {
             // UP BUTTON
             case R.id.button1: {
 
+                start = true;
+
                 //calculate distance
                 Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
 
@@ -519,27 +532,40 @@ public class MainActivity extends Activity implements OnClickListener {
                     StdGaussian();
                     double div = offset / 10.0;
                     distance[j] = stepDetector * (1.65 * 0.4 + div);
-                    
+
                 }
-                showToast("I moved in magnitude" + distance[0]);
+                //showToast("I moved in magnitude" + distance[0]);
+                //showToast("angle" + realAngle);
+
+                Log.e("I moved in magnitude" ,""+ distance[0]);
+                Log.e("angle" ,""+ realAngle);
+                //showToast("angle"+realAngle);
+
                 for (int i = 0; i < 5; i++) {
                     xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
                     yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
 
-                    
+
 
                 }
-                
-                showToast("x: " + xUpdated[0]);
-                showToast("y: " + yUpdated[0]);
 
+                //showToast("x: " + xUpdated[0]);
+                //showToast("y: " + yUpdated[0]);
+                Log.e("x", ""+xUpdated[0]);
+                Log.e("y", ""+yUpdated[0]);
+
+                Log.e("injectingX",""+xUpdated[0].intValue()*20);
+                Log.e("injectingY", ""+yUpdated[0].intValue()*20);
+
+                //xUpdated[0] = 1.0;
+                //yUpdated[0] = -1.0;
 
 
 
                 for (int fy = 0; fy < drawable.size(); fy++) {
                     for (int fx = 0; fx < drawable.get(0).size(); fx++) {
                         Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-                        drawable.get(fy).get(fx).setBounds(r.left - yUpdated[0].intValue()*20, r.top - xUpdated[0].intValue()*20, r.right - yUpdated[0].intValue()*20, r.bottom - xUpdated[0].intValue()*20);
+                        drawable.get(fy).get(fx).setBounds(r.left + yUpdated[0].intValue()*20, r.top + xUpdated[0].intValue()*20, r.right + yUpdated[0].intValue()*20, r.bottom + xUpdated[0].intValue()*20);
 ///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
                         drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
                         textView.setText("\n\tMove Up" + "\n\tTop Margin = "
@@ -593,6 +619,7 @@ public class MainActivity extends Activity implements OnClickListener {
         }
         // if there is a collision between the dot and any of the walls
         // reset dot to center of canvas
+        // reposition the dots
         if (isCollision()){
             int countersafe=0;
             for(int fy=0; fy < drawable.size(); fy++) {
@@ -761,7 +788,211 @@ public class MainActivity extends Activity implements OnClickListener {
         return stepRect.intersect(first.getBounds());
     }
 
-    // Simple function that can be used to display toasts
+
+
+
+
+    public void moveParticles() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                showToast("ang" + realAngle);
+
+                //calculate distance
+                Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+
+                //where was I? use of x and y
+                //gauss = noise
+
+                for (int j = 0; j < 5; j++) {
+                    StdGaussian();
+                    double div = offset / 10.0;
+                    distance[j] = stepDetector * (1.65 * 0.4 + div);
+
+                }
+                //showToast("I moved in magnitude" + distance[0]);
+                //showToast("angle" + realAngle);
+
+                Log.e("I moved in magnitude", "" + distance[0]);
+                Log.e("angle", "" + realAngle);
+                //showToast("angle"+realAngle);
+
+                for (int i = 0; i < 5; i++) {
+                    xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
+                    yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
+
+
+                }
+
+                //showToast("x: " + xUpdated[0]);
+                //showToast("y: " + yUpdated[0]);
+                Log.e("x", "" + xUpdated[0]);
+                Log.e("y", "" + yUpdated[0]);
+
+
+
+                //xUpdated[0] = 1.0;
+                //yUpdated[0] = -1.0;
+
+                yUpdatedScaled[0] = yUpdated[0]*20;
+                xUpdatedScaled[0] = xUpdated[0]*20;
+
+                showToast("injectingX"+yUpdatedScaled[0]);
+                showToast("injectingY"+xUpdatedScaled[0]);
+
+
+                for (int fy = 0; fy < drawable.size(); fy++) {
+                    for (int fx = 0; fx < drawable.get(0).size(); fx++) {
+                        Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
+                        drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
+///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
+                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                        textView.setText("\n\tMove Up" + "\n\tTop Margin = "
+                                + drawable.get(fy).get(fx).getBounds().top);
+                    }
+                }
+
+                // if there is a collision between the dot and any of the walls
+                // reset dot to center of canvas
+                // reposition the dots
+                if (isCollision()) {
+                    int countersafe = 0;
+                    for (int fy = 0; fy < drawable.size(); fy++) {
+                        int maximumfx = 0;
+                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                            if (maximumfx < drawable.get(fy).size())
+                                maximumfx = drawable.get(fy).size();
+                            for (ShapeDrawable wall : walls) {
+                                if (isCollision(wall, drawable.get(fy).get(fx), drawablebefore.get(fy).get(fx))) {
+                                    int fxr = 0;
+                                    int fyr = 0;
+                                    probability.get(fy).set(fx, 0);
+                                    boolean reshape = true;
+
+                                    while (reshape == true) {
+
+                                        fyr = new Random().nextInt(drawable.size());
+                                        fxr = new Random().nextInt(drawable.get(fyr).size());
+                                        if (maximumfx < drawable.get(fyr).size())
+                                            maximumfx = drawable.get(fyr).size();
+                                        for (ShapeDrawable wall2 : walls) {
+                                            if (isCollision(wall2, drawable.get(fyr).get(fxr), drawablebefore.get(fyr).get(fxr))) {
+                                                reshape = true;
+                                                countersafe++;
+                                                break;
+                                            } else {
+                                                reshape = false;
+                                            }
+                                        }
+                                        if (countersafe > drawable.size() * maximumfx) {
+                                            fxr = fx;
+                                            fyr = fy;
+                                            break;
+                                        }
+                                    }
+                                    Rect r;
+                                    if (countersafe > drawable.size() * drawable.get(fy).size()) {
+                                        r = drawablebefore.get(fyr).get(fxr).getBounds();
+                                    } else {
+                                        r = drawable.get(fyr).get(fxr).getBounds();
+                                    }
+                                    Integer dummy = probability.get(fyr).get(fxr);
+                                    dummy++;
+                                    probability.get(fyr).set(fxr, dummy);
+                                    if (probability.get(fyr).get(fxr) > maxprob)
+                                        maxprob = probability.get(fyr).get(fxr);
+                                    drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                    // drawable.get(fy).get(fx).setBounds(width/2-8 , height/2-8, width/2+8, height/2+8);
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (resampling >= 10) {
+                    Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
+                    if (convergence <= 0.5) {
+                        convergence += 0.03;
+                    }
+                    int tempmaxprob = maxprob;
+                    maxprob = 1;
+                    for (int fy = 0; fy < drawable.size(); fy++) {
+                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                            int fyr = 0;
+                            int fxr = 0;
+                            Rect r;
+                            if (probability.get(fy).get(fx) >= tempmaxprob * convergence) {
+                                r = drawable.get(fy).get(fx).getBounds();
+                                drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                if (probability.get(fy).get(fx) > maxprob)
+                                    maxprob = probability.get(fy).get(fx);
+
+                            } else {
+                                do {
+                                    fyr = new Random().nextInt(drawable.size());
+                                    fxr = new Random().nextInt(drawable.get(fyr).size());
+                                } while (probability.get(fyr).get(fxr) < tempmaxprob * convergence);
+
+                                if (convergence <= 0.2) {
+                                    if (fx > drawable.get(fy).size()) break;
+                                    probability.get(fy).remove(fx);
+                                    drawablebefore.get(fy).remove(fx);
+                                    drawable.get(fy).remove(fx);
+                                    if (drawable.get(fy).size() == 0) {
+                                        drawable.remove(fy);
+                                        fy--;
+                                        break;
+                                    }
+                                    fx--;
+                                } else {
+                                    probability.get(fy).set(fx, 0);
+                                    r = drawable.get(fyr).get(fxr).getBounds();
+                                    drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                    drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                    Integer dummy = probability.get(fyr).get(fxr);
+                                    dummy++;
+                                    probability.get(fyr).set(fxr, dummy);
+                                    //if (probability.get(fyr).get(fxr) > maxprob)
+                                    //  maxprob = probability.get(fyr).get(fxr);
+                                }
+                            }
+                        }
+                    }
+                    resampling = 0;
+                    maxprob = 1;
+                    for (int fy = 0; fy < drawable.size(); fy++) {
+                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                            probability.get(fy).set(fx, 1);
+                        }
+                    }
+                }
+
+                // redrawing of the object
+                canvas.drawColor(Color.WHITE);
+                for (int fy = 0; fy < drawable.size(); fy++) {
+                    for (ShapeDrawable dots : drawable.get(fy))
+                        dots.draw(canvas);
+                }
+                for (ShapeDrawable wall : walls)
+                    wall.draw(canvas);
+
+
+            }
+
+
+        });
+}
+
+
+
+
+
+
+        // Simple function that can be used to display toasts
     public void showToast(final String message) {
         runOnUiThread(new Runnable() {
             @Override
