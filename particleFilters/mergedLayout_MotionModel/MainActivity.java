@@ -18,6 +18,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Display;
@@ -45,6 +46,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 
 /**
  * Smart Phone Sensing Example 6. Object movement and interaction on canvas.
@@ -158,17 +160,208 @@ public class MainActivity extends Activity implements OnClickListener {
                 case Sensor.TYPE_STEP_DETECTOR:
 
                     // Increment the step detector count
-
+                    CustomView hello = new CustomView(context);
 
                     stepDetector++;
-                    showToast("Det: " + stepDetector);
+                    //showToast("Det: " + stepDetector);
 
                     // Output the value to the simple GUI
 
 
                     // detectText.setText("Det: " + stepDetector);
                     if (start) {
-                        moveParticles();
+                        hello.moveParticles();
+
+
+                        /*
+                        //start
+                        //showToast("ang" + realAngle);
+
+                        //calculate distance
+                        Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+
+                        //where was I? use of x and y
+                        //gauss = noise
+
+                        for (int j = 0; j < 5; j++) {
+                            StdGaussian();
+                            double div = offset / 10.0;
+                            distance[j] = stepDetector * (1.65 * 0.4 + div);
+
+                        }
+                        //showToast("I moved in magnitude" + distance[0]);
+                        //showToast("angle" + realAngle);
+
+                        Log.e("I moved in magnitude", "" + distance[0]);
+                        Log.e("angle", "" + realAngle);
+                        //showToast("angle"+realAngle);
+
+                        for (int i = 0; i < 5; i++) {
+                            xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
+                            yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
+
+
+                        }
+
+                        //showToast("x: " + xUpdated[0]);
+                        //showToast("y: " + yUpdated[0]);
+                        Log.e("x", "" + xUpdated[0]);
+                        Log.e("y", "" + yUpdated[0]);
+
+
+
+                        //xUpdated[0] = 1.0;
+                        //yUpdated[0] = -1.0;
+
+                        yUpdatedScaled[0] = yUpdated[0]*20;
+                        xUpdatedScaled[0] = xUpdated[0]*20;
+
+                        //showToast("injectingX"+yUpdatedScaled[0].intValue());
+                        //showToast("injectingY"+xUpdatedScaled[0].intValue());
+
+
+                        for (int fy = 0; fy < drawable.size(); fy++) {
+                            for (int fx = 0; fx < drawable.get(0).size(); fx++) {
+                                Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
+                                drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
+///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
+                                drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                textView.setText("\n\tMove Up" + "\n\tTop Margin = "
+                                        + drawable.get(fy).get(fx).getBounds().top);
+                            }
+                        }
+
+                        // if there is a collision between the dot and any of the walls
+                        // reset dot to center of canvas
+                        // reposition the dots
+                        if (isCollision()) {
+                            int countersafe = 0;
+                            for (int fy = 0; fy < drawable.size(); fy++) {
+                                int maximumfx = 0;
+                                for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                    if (maximumfx < drawable.get(fy).size())
+                                        maximumfx = drawable.get(fy).size();
+                                    for (ShapeDrawable wall : walls) {
+                                        if (isCollision(wall, drawable.get(fy).get(fx), drawablebefore.get(fy).get(fx))) {
+                                            int fxr = 0;
+                                            int fyr = 0;
+                                            probability.get(fy).set(fx, 0);
+                                            boolean reshape = true;
+
+                                            while (reshape == true) {
+
+                                                fyr = new Random().nextInt(drawable.size());
+                                                fxr = new Random().nextInt(drawable.get(fyr).size());
+                                                if (maximumfx < drawable.get(fyr).size())
+                                                    maximumfx = drawable.get(fyr).size();
+                                                for (ShapeDrawable wall2 : walls) {
+                                                    if (isCollision(wall2, drawable.get(fyr).get(fxr), drawablebefore.get(fyr).get(fxr))) {
+                                                        reshape = true;
+                                                        countersafe++;
+                                                        break;
+                                                    } else {
+                                                        reshape = false;
+                                                    }
+                                                }
+                                                if (countersafe > drawable.size() * maximumfx) {
+                                                    fxr = fx;
+                                                    fyr = fy;
+                                                    break;
+                                                }
+                                            }
+                                            Rect r;
+                                            if (countersafe > drawable.size() * drawable.get(fy).size()) {
+                                                r = drawablebefore.get(fyr).get(fxr).getBounds();
+                                            } else {
+                                                r = drawable.get(fyr).get(fxr).getBounds();
+                                            }
+                                            Integer dummy = probability.get(fyr).get(fxr);
+                                            dummy++;
+                                            probability.get(fyr).set(fxr, dummy);
+                                            if (probability.get(fyr).get(fxr) > maxprob)
+                                                maxprob = probability.get(fyr).get(fxr);
+                                            drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                            // drawable.get(fy).get(fx).setBounds(width/2-8 , height/2-8, width/2+8, height/2+8);
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+
+                        if (resampling >= 10) {
+                            Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
+                            if (convergence <= 0.5) {
+                                convergence += 0.03;
+                            }
+                            int tempmaxprob = maxprob;
+                            maxprob = 1;
+                            for (int fy = 0; fy < drawable.size(); fy++) {
+                                for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                    int fyr = 0;
+                                    int fxr = 0;
+                                    Rect r;
+                                    if (probability.get(fy).get(fx) >= tempmaxprob * convergence) {
+                                        r = drawable.get(fy).get(fx).getBounds();
+                                        drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                        if (probability.get(fy).get(fx) > maxprob)
+                                            maxprob = probability.get(fy).get(fx);
+
+                                    } else {
+                                        do {
+                                            fyr = new Random().nextInt(drawable.size());
+                                            fxr = new Random().nextInt(drawable.get(fyr).size());
+                                        } while (probability.get(fyr).get(fxr) < tempmaxprob * convergence);
+
+                                        if (convergence <= 0.2) {
+                                            if (fx > drawable.get(fy).size()) break;
+                                            probability.get(fy).remove(fx);
+                                            drawablebefore.get(fy).remove(fx);
+                                            drawable.get(fy).remove(fx);
+                                            if (drawable.get(fy).size() == 0) {
+                                                drawable.remove(fy);
+                                                fy--;
+                                                break;
+                                            }
+                                            fx--;
+                                        } else {
+                                            probability.get(fy).set(fx, 0);
+                                            r = drawable.get(fyr).get(fxr).getBounds();
+                                            drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                            drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                            Integer dummy = probability.get(fyr).get(fxr);
+                                            dummy++;
+                                            probability.get(fyr).set(fxr, dummy);
+                                            //if (probability.get(fyr).get(fxr) > maxprob)
+                                            //  maxprob = probability.get(fyr).get(fxr);
+                                        }
+                                    }
+                                }
+                            }
+                            resampling = 0;
+                            maxprob = 1;
+                            for (int fy = 0; fy < drawable.size(); fy++) {
+                                for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                    probability.get(fy).set(fx, 1);
+                                }
+                            }
+                        }
+
+                        // redrawing of the object
+                        canvas.drawColor(Color.WHITE);
+                        for (int fy = 0; fy < drawable.size(); fy++) {
+                            for (ShapeDrawable dots : drawable.get(fy))
+                                dots.draw(canvas);
+                        }
+                        for (ShapeDrawable wall : walls)
+                            wall.draw(canvas);
+
+*/
+                        //end
+
+
                     }
 
                     stepDetector = 0;
@@ -337,14 +530,14 @@ public class MainActivity extends Activity implements OnClickListener {
         maxprob = 1;
         convergence = (float) 0.15;
 
-        for (int fy = 40; fy < roomheight * 10 ; fy += 115 ){
+        for (int fy = 40; fy < roomheight * 10 ; fy += 15 ){
             //      for (int fy = 600; fy < roomheight * 16 + 20; fy += 20 ){
             ArrayList<ShapeDrawable> dotx = new ArrayList<>();
             ArrayList<ShapeDrawable> dotxb = new ArrayList<>();
             ArrayList<Integer> probx = new ArrayList<>();
 //            for (int fx = roomwidth/2; fx < width - roomwidth/2; fx += 20){
 
-            for (int fx = cw; fx < width-cw; fx += 115){
+            for (int fx = cw; fx < width-cw; fx += 15){
                 ShapeDrawable dot = new ShapeDrawable(new OvalShape());
                 ShapeDrawable dotb = new ShapeDrawable(new OvalShape());
                 dot.getPaint().setColor(Color.BLUE);
@@ -438,7 +631,7 @@ public class MainActivity extends Activity implements OnClickListener {
         Sensor mStepCounterSensor;
         SensorManager mSensorManager;
 
-        final int SENSOR_DELAY = 500 * 1000; // 500ms
+        final int SENSOR_DELAY = 1000 * 1000; // 500ms
 
         stepsTaken = 0;
         reportedSteps = 0;
@@ -514,6 +707,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // - The text in the center of the buttons
         // - The margins
         // - The text that shows the margin
+;
 
 
         switch (v.getId()) {
@@ -521,7 +715,7 @@ public class MainActivity extends Activity implements OnClickListener {
             case R.id.button1: {
 
                 start = true;
-
+/*
                 //calculate distance
                 Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
 
@@ -573,6 +767,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     }
                 }
 
+                */
+
                 break;
             }
             // DOWN BUTTON
@@ -617,6 +813,8 @@ public class MainActivity extends Activity implements OnClickListener {
                 break;
             }
         }
+
+        /*
         // if there is a collision between the dot and any of the walls
         // reset dot to center of canvas
         // reposition the dots
@@ -742,6 +940,7 @@ public class MainActivity extends Activity implements OnClickListener {
         }
         for (ShapeDrawable wall : walls)
             wall.draw(canvas);
+            */
     }
 
     /**
@@ -788,204 +987,217 @@ public class MainActivity extends Activity implements OnClickListener {
         return stepRect.intersect(first.getBounds());
     }
 
+    Handler viewHandler = new Handler();
 
 
+    public class CustomView extends View {
+        public CustomView(Context context) {
+            super(context);
+        }
+
+        public void moveParticles() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
 
 
-    public void moveParticles() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+                    View viewe = getWindow().getDecorView().findViewById(android.R.id.content);
+                    //showToast("ang" + realAngle);
 
-                showToast("ang" + realAngle);
+                    //calculate distance
+                    Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
 
-                //calculate distance
-                Double[] distance = new Double[]{(double) 0, (double) 0, (double) 0, (double) 0, (double) 0};
+                    //where was I? use of x and y
+                    //gauss = noise
 
-                //where was I? use of x and y
-                //gauss = noise
+                    for (int j = 0; j < 5; j++) {
+                        StdGaussian();
+                        double div = offset / 10.0;
+                        distance[j] = stepDetector * (1.65 * 0.4 + div);
 
-                for (int j = 0; j < 5; j++) {
-                    StdGaussian();
-                    double div = offset / 10.0;
-                    distance[j] = stepDetector * (1.65 * 0.4 + div);
-
-                }
-                //showToast("I moved in magnitude" + distance[0]);
-                //showToast("angle" + realAngle);
-
-                Log.e("I moved in magnitude", "" + distance[0]);
-                Log.e("angle", "" + realAngle);
-                //showToast("angle"+realAngle);
-
-                for (int i = 0; i < 5; i++) {
-                    xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
-                    yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
-
-
-                }
-
-                //showToast("x: " + xUpdated[0]);
-                //showToast("y: " + yUpdated[0]);
-                Log.e("x", "" + xUpdated[0]);
-                Log.e("y", "" + yUpdated[0]);
-
-
-
-                //xUpdated[0] = 1.0;
-                //yUpdated[0] = -1.0;
-
-                yUpdatedScaled[0] = yUpdated[0]*20;
-                xUpdatedScaled[0] = xUpdated[0]*20;
-
-                showToast("injectingX"+yUpdatedScaled[0]);
-                showToast("injectingY"+xUpdatedScaled[0]);
-
-
-                for (int fy = 0; fy < drawable.size(); fy++) {
-                    for (int fx = 0; fx < drawable.get(0).size(); fx++) {
-                        Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-                        drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
-///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
-                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                        textView.setText("\n\tMove Up" + "\n\tTop Margin = "
-                                + drawable.get(fy).get(fx).getBounds().top);
                     }
-                }
+                    //showToast("I moved in magnitude" + distance[0]);
+                    //showToast("angle" + realAngle);
 
-                // if there is a collision between the dot and any of the walls
-                // reset dot to center of canvas
-                // reposition the dots
-                if (isCollision()) {
-                    int countersafe = 0;
+                    Log.e("I moved in magnitude", "" + distance[0]);
+                    Log.e("angle", "" + realAngle);
+                    //showToast("angle"+realAngle);
+                    Toast.makeText(getApplication(), "angle"+realAngle, Toast.LENGTH_SHORT).show();
+
+                    for (int i = 0; i < 5; i++) {
+                        xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
+                        yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
+
+
+                    }
+
+                    //showToast("x: " + xUpdated[0]);
+                    //showToast("y: " + yUpdated[0]);
+                    Log.e("x", "" + xUpdated[0]);
+                    Log.e("y", "" + yUpdated[0]);
+
+
+                    //xUpdated[0] = 1.0;
+                    //yUpdated[0] = -1.0;
+
+                    yUpdatedScaled[0] = yUpdated[0] * 20;
+                    xUpdatedScaled[0] = xUpdated[0] * 20;
+
+                    //showToast("injectingX"+yUpdatedScaled[0].intValue());
+                    //showToast("injectingY"+xUpdatedScaled[0].intValue());
+                    Toast.makeText(getApplication(), "InjectingX"+xUpdatedScaled[0], Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplication(), "InjectingY"+yUpdatedScaled[0], Toast.LENGTH_SHORT).show();
+
+
                     for (int fy = 0; fy < drawable.size(); fy++) {
-                        int maximumfx = 0;
-                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
-                            if (maximumfx < drawable.get(fy).size())
-                                maximumfx = drawable.get(fy).size();
-                            for (ShapeDrawable wall : walls) {
-                                if (isCollision(wall, drawable.get(fy).get(fx), drawablebefore.get(fy).get(fx))) {
-                                    int fxr = 0;
-                                    int fyr = 0;
-                                    probability.get(fy).set(fx, 0);
-                                    boolean reshape = true;
+                        for (int fx = 0; fx < drawable.get(0).size(); fx++) {
+                            Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
+                            drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
+///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
+                            drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                            textView.setText("\n\tMove Up" + "\n\tTop Margin = "
+                                    + drawable.get(fy).get(fx).getBounds().top);
+                        }
+                    }
 
-                                    while (reshape == true) {
+                    // if there is a collision between the dot and any of the walls
+                    // reset dot to center of canvas
+                    // reposition the dots
+                    if (isCollision()) {
+                        int countersafe = 0;
+                        for (int fy = 0; fy < drawable.size(); fy++) {
+                            int maximumfx = 0;
+                            for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                if (maximumfx < drawable.get(fy).size())
+                                    maximumfx = drawable.get(fy).size();
+                                for (ShapeDrawable wall : walls) {
+                                    if (isCollision(wall, drawable.get(fy).get(fx), drawablebefore.get(fy).get(fx))) {
+                                        int fxr = 0;
+                                        int fyr = 0;
+                                        probability.get(fy).set(fx, 0);
+                                        boolean reshape = true;
 
-                                        fyr = new Random().nextInt(drawable.size());
-                                        fxr = new Random().nextInt(drawable.get(fyr).size());
-                                        if (maximumfx < drawable.get(fyr).size())
-                                            maximumfx = drawable.get(fyr).size();
-                                        for (ShapeDrawable wall2 : walls) {
-                                            if (isCollision(wall2, drawable.get(fyr).get(fxr), drawablebefore.get(fyr).get(fxr))) {
-                                                reshape = true;
-                                                countersafe++;
+                                        while (reshape == true) {
+
+                                            fyr = new Random().nextInt(drawable.size());
+                                            fxr = new Random().nextInt(drawable.get(fyr).size());
+                                            if (maximumfx < drawable.get(fyr).size())
+                                                maximumfx = drawable.get(fyr).size();
+                                            for (ShapeDrawable wall2 : walls) {
+                                                if (isCollision(wall2, drawable.get(fyr).get(fxr), drawablebefore.get(fyr).get(fxr))) {
+                                                    reshape = true;
+                                                    countersafe++;
+                                                    break;
+                                                } else {
+                                                    reshape = false;
+                                                }
+                                            }
+                                            if (countersafe > drawable.size() * maximumfx) {
+                                                fxr = fx;
+                                                fyr = fy;
                                                 break;
-                                            } else {
-                                                reshape = false;
                                             }
                                         }
-                                        if (countersafe > drawable.size() * maximumfx) {
-                                            fxr = fx;
-                                            fyr = fy;
-                                            break;
+                                        Rect r;
+                                        if (countersafe > drawable.size() * drawable.get(fy).size()) {
+                                            r = drawablebefore.get(fyr).get(fxr).getBounds();
+                                        } else {
+                                            r = drawable.get(fyr).get(fxr).getBounds();
                                         }
-                                    }
-                                    Rect r;
-                                    if (countersafe > drawable.size() * drawable.get(fy).size()) {
-                                        r = drawablebefore.get(fyr).get(fxr).getBounds();
-                                    } else {
-                                        r = drawable.get(fyr).get(fxr).getBounds();
-                                    }
-                                    Integer dummy = probability.get(fyr).get(fxr);
-                                    dummy++;
-                                    probability.get(fyr).set(fxr, dummy);
-                                    if (probability.get(fyr).get(fxr) > maxprob)
-                                        maxprob = probability.get(fyr).get(fxr);
-                                    drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                                    // drawable.get(fy).get(fx).setBounds(width/2-8 , height/2-8, width/2+8, height/2+8);
+                                        Integer dummy = probability.get(fyr).get(fxr);
+                                        dummy++;
+                                        probability.get(fyr).set(fxr, dummy);
+                                        if (probability.get(fyr).get(fxr) > maxprob)
+                                            maxprob = probability.get(fyr).get(fxr);
+                                        drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                        // drawable.get(fy).get(fx).setBounds(width/2-8 , height/2-8, width/2+8, height/2+8);
 
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
 
-                if (resampling >= 10) {
-                    Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
-                    if (convergence <= 0.5) {
-                        convergence += 0.03;
-                    }
-                    int tempmaxprob = maxprob;
-                    maxprob = 1;
-                    for (int fy = 0; fy < drawable.size(); fy++) {
-                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
-                            int fyr = 0;
-                            int fxr = 0;
-                            Rect r;
-                            if (probability.get(fy).get(fx) >= tempmaxprob * convergence) {
-                                r = drawable.get(fy).get(fx).getBounds();
-                                drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                                drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                                if (probability.get(fy).get(fx) > maxprob)
-                                    maxprob = probability.get(fy).get(fx);
-
-                            } else {
-                                do {
-                                    fyr = new Random().nextInt(drawable.size());
-                                    fxr = new Random().nextInt(drawable.get(fyr).size());
-                                } while (probability.get(fyr).get(fxr) < tempmaxprob * convergence);
-
-                                if (convergence <= 0.2) {
-                                    if (fx > drawable.get(fy).size()) break;
-                                    probability.get(fy).remove(fx);
-                                    drawablebefore.get(fy).remove(fx);
-                                    drawable.get(fy).remove(fx);
-                                    if (drawable.get(fy).size() == 0) {
-                                        drawable.remove(fy);
-                                        fy--;
-                                        break;
-                                    }
-                                    fx--;
-                                } else {
-                                    probability.get(fy).set(fx, 0);
-                                    r = drawable.get(fyr).get(fxr).getBounds();
+                    if (resampling >= 10) {
+                        Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
+                        if (convergence <= 0.5) {
+                            convergence += 0.03;
+                        }
+                        int tempmaxprob = maxprob;
+                        maxprob = 1;
+                        for (int fy = 0; fy < drawable.size(); fy++) {
+                            for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                int fyr = 0;
+                                int fxr = 0;
+                                Rect r;
+                                if (probability.get(fy).get(fx) >= tempmaxprob * convergence) {
+                                    r = drawable.get(fy).get(fx).getBounds();
                                     drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
                                     drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                                    Integer dummy = probability.get(fyr).get(fxr);
-                                    dummy++;
-                                    probability.get(fyr).set(fxr, dummy);
-                                    //if (probability.get(fyr).get(fxr) > maxprob)
-                                    //  maxprob = probability.get(fyr).get(fxr);
+                                    if (probability.get(fy).get(fx) > maxprob)
+                                        maxprob = probability.get(fy).get(fx);
+
+                                } else {
+                                    do {
+                                        fyr = new Random().nextInt(drawable.size());
+                                        fxr = new Random().nextInt(drawable.get(fyr).size());
+                                    } while (probability.get(fyr).get(fxr) < tempmaxprob * convergence);
+
+                                    if (convergence <= 0.2) {
+                                        if (fx > drawable.get(fy).size()) break;
+                                        probability.get(fy).remove(fx);
+                                        drawablebefore.get(fy).remove(fx);
+                                        drawable.get(fy).remove(fx);
+                                        if (drawable.get(fy).size() == 0) {
+                                            drawable.remove(fy);
+                                            fy--;
+                                            break;
+                                        }
+                                        fx--;
+                                    } else {
+                                        probability.get(fy).set(fx, 0);
+                                        r = drawable.get(fyr).get(fxr).getBounds();
+                                        drawable.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
+                                        Integer dummy = probability.get(fyr).get(fxr);
+                                        dummy++;
+                                        probability.get(fyr).set(fxr, dummy);
+                                        //if (probability.get(fyr).get(fxr) > maxprob)
+                                        //  maxprob = probability.get(fyr).get(fxr);
+                                    }
                                 }
                             }
                         }
-                    }
-                    resampling = 0;
-                    maxprob = 1;
-                    for (int fy = 0; fy < drawable.size(); fy++) {
-                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
-                            probability.get(fy).set(fx, 1);
+                        resampling = 0;
+                        maxprob = 1;
+                        for (int fy = 0; fy < drawable.size(); fy++) {
+                            for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                                probability.get(fy).set(fx, 1);
+                            }
                         }
                     }
+
+                    // redrawing of the object
+                    canvas.drawColor(Color.WHITE);
+                    for (int fy = 0; fy < drawable.size(); fy++) {
+                        for (ShapeDrawable dots : drawable.get(fy))
+                            dots.draw(canvas);
+                    }
+                    for (ShapeDrawable wall : walls)
+                        wall.draw(canvas);
+
+
+                    viewe.invalidate();
+                    viewe.requestLayout();
+
                 }
 
-                // redrawing of the object
-                canvas.drawColor(Color.WHITE);
-                for (int fy = 0; fy < drawable.size(); fy++) {
-                    for (ShapeDrawable dots : drawable.get(fy))
-                        dots.draw(canvas);
-                }
-                for (ShapeDrawable wall : walls)
-                    wall.draw(canvas);
 
+            });
+        }
+    }
 
-            }
-
-
-        });
-}
 
 
 
@@ -993,13 +1205,12 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
         // Simple function that can be used to display toasts
-    public void showToast(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-            }
-        });
+//    public void showToast(final String message) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
     }
-}
