@@ -61,6 +61,8 @@ public class MainActivity extends Activity implements OnClickListener {
      * The text view.
      */
     private TextView textView;
+    private TextView textView2;
+    private TextView textView3;
     /**
      * The shape.
      */
@@ -96,8 +98,9 @@ public class MainActivity extends Activity implements OnClickListener {
     private Sensor mRotationSensor;
 
     int stepsTaken;
-    int reportedSteps;
+    int reportedSteps = 0;
     int stepDetector;
+    int counterFirst = 0;
     float[] angle;
 
     float[] rMat = new float[9];
@@ -108,9 +111,11 @@ public class MainActivity extends Activity implements OnClickListener {
     private float mAzimuthInitial = 0;
     float[] orientation = new float[3];
     double offset;
+    int offsetSteps = 0;
     double realAngle = 0;
     boolean start = false;
     boolean founded = false;
+    boolean init = true;
 
 
     @Nullable
@@ -146,30 +151,38 @@ public class MainActivity extends Activity implements OnClickListener {
                 case Sensor.TYPE_STEP_COUNTER:
                     //now = event.timestamp;
 
+                    if (init & counterFirst > 0) {
+                        Toast.makeText(getApplication(), "CALIBRATED", Toast.LENGTH_SHORT).show();
+                        init = false;
+                    }
+
                     if (reportedSteps < 1) {
 
                         // Log the initial value
-
                         reportedSteps = (int) event.values[0];
+
                     }
 
+                    int stepsTakenDummy = (int) event.values[0];
 
-                    stepsTaken = (int) event.values[0] - reportedSteps;
+                    //stepsTaken = (int) event.values[0] - reportedSteps - offsetSteps;
+                    stepsTakenDummy =  (int) event.values[0] - reportedSteps;
+                    textView.setText("steps"+stepsTakenDummy);
+                    stepsTaken = 1;
                     //showToast("Det: " + stepsTaken);
 
+                    // Increment the step detector count
+                    CustomView hello = new CustomView(context);
+                    if (start) {
+                            hello.moveParticles();
+                    }
+                    offsetSteps=+1;
+                    counterFirst ++;
                     break;
 
                 case Sensor.TYPE_STEP_DETECTOR:
 
-                    // Increment the step detector count
-                    CustomView hello = new CustomView(context);
-
                     stepDetector++;
-                    Toast.makeText(context, "det", Toast.LENGTH_SHORT).show();
-                    if (start) {
-                        hello.moveParticles();
-
-                    }
 
                     stepDetector = 0;
 
@@ -243,6 +256,7 @@ public class MainActivity extends Activity implements OnClickListener {
                             realAngle = resize / 2.0;
                         }
                     }
+                    textView2.setText("\nangle"+ realAngle);
                     //Log.e("Here", ""+realAngle);
 
                     break;
@@ -300,6 +314,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
         // set the text view
         textView = (TextView) findViewById(R.id.textView1);
+        textView2 = (TextView) findViewById(R.id.textView2);
+        textView3 = (TextView) findViewById(R.id.textView);
+
 
         // set listeners
         up.setOnClickListener(this);
@@ -462,7 +479,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // Register the listeners. Used for receiving notifications from
         // the SensorManager when sensor values have changed.
 
-        //sensorManager.registerListener(thiss, senStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(thiss, senStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
@@ -622,7 +639,7 @@ public class MainActivity extends Activity implements OnClickListener {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
+                    resampling++;
 
                     View viewe = getWindow().getDecorView().findViewById(android.R.id.content);
                     //showToast("ang" + realAngle);
@@ -636,7 +653,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     for (int j = 0; j < 5; j++) {
                         StdGaussian();
                         double div = offset / 10.0;
-                        distance[j] = stepDetector * (1.65 * 0.4 + div);
+                        //distance[j] = stepDetector * (1.65 * 0.4 + div);
+                        distance[j] = stepsTaken * (1.65 * 0.4 + div);
 
                     }
                     //showToast("I moved in magnitude" + distance[0]);
@@ -644,8 +662,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
                     Log.e("I moved in magnitude", "" + distance[0]);
                     Log.e("angle", "" + realAngle);
+
                     //showToast("angle"+realAngle);
-                    Toast.makeText(getApplication(), "angle"+realAngle, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplication(), "angle"+realAngle, Toast.LENGTH_SHORT).show();
 
                     for (int i = 0; i < 5; i++) {
                         xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
@@ -668,8 +687,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
                     //showToast("injectingX"+yUpdatedScaled[0].intValue());
                     //showToast("injectingY"+xUpdatedScaled[0].intValue());
-                    Toast.makeText(getApplication(), "InjectingX"+xUpdatedScaled[0], Toast.LENGTH_SHORT).show();
-                    Toast.makeText(getApplication(), "InjectingY"+yUpdatedScaled[0], Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplication(), "InjectingX"+xUpdatedScaled[0], Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplication(), "InjectingY"+yUpdatedScaled[0], Toast.LENGTH_SHORT).show();
+                    textView3.setText("\nx"+xUpdatedScaled+"\ny"+yUpdatedScaled);
 
 
                     for (int fy = 0; fy < drawable.size(); fy++) {
@@ -678,8 +698,7 @@ public class MainActivity extends Activity implements OnClickListener {
                             drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
 ///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
                             drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                            textView.setText("\n\tMove Up" + "\n\tTop Margin = "
-                                    + drawable.get(fy).get(fx).getBounds().top);
+                            //textView.setText("\n\tMove Up" + "\n\tTop Margin = "+ drawable.get(fy).get(fx).getBounds().top);
                         }
                     }
 
@@ -824,7 +843,7 @@ public class MainActivity extends Activity implements OnClickListener {
                                 founded = true;
                                 drawable.get(0).get(0).setBounds(ffx-4,ffy-4,ffx+4,ffy+4);
                                 drawablebefore.get(0).get(0).setBounds(ffx-4,ffy-4,ffx+4,ffy+4);
-                                Toast.makeText(getApplication(), "FOUNDED", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(getApplication(), "FOUNDED", Toast.LENGTH_SHORT).show();
                             }
                             resampling = 0;
                             maxprob = 1;
