@@ -179,7 +179,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     offsetSteps=+1;
                     counterFirst ++;
                     break;
-
+                /*
                 case Sensor.TYPE_STEP_DETECTOR:
 
                     stepDetector++;
@@ -187,8 +187,9 @@ public class MainActivity extends Activity implements OnClickListener {
                     stepDetector = 0;
 
                     break;
+                    */
 
-
+                /*
                 case Sensor.TYPE_ACCELEROMETER:
 
                     // Get the accelerometer values and set them to a string with 2dp
@@ -203,6 +204,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     //accelText.setText("Acc:" + x + "," + y + "," + z);
 
                     break;
+                    */
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     mData = event.values.clone();
                     break;
@@ -467,10 +469,10 @@ public class MainActivity extends Activity implements OnClickListener {
 
         // Reference/Assign the sensors
 
-        senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        //senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-        senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        //senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        //senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         mag = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         // Register the sensors for event callback
@@ -479,12 +481,12 @@ public class MainActivity extends Activity implements OnClickListener {
         // Register the listeners. Used for receiving notifications from
         // the SensorManager when sensor values have changed.
 
-        sensorManager.registerListener(thiss, senStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
-        sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
-        sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(thiss, mag, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(thiss, mRotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(thiss, senStepCounter, SENSOR_DELAY);
+        //sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
+        //sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
+        //sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(thiss, mag, SENSOR_DELAY);
+        sensorManager.registerListener(thiss, mRotationSensor, SENSOR_DELAY);
 
         for (int i = 0; i < 5; i++) {
             x.add((double) 0);
@@ -663,6 +665,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     Log.e("I moved in magnitude", "" + distance[0]);
                     Log.e("angle", "" + realAngle);
 
+
                     //showToast("angle"+realAngle);
                     //Toast.makeText(getApplication(), "angle"+realAngle, Toast.LENGTH_SHORT).show();
 
@@ -682,8 +685,11 @@ public class MainActivity extends Activity implements OnClickListener {
                     //xUpdated[0] = 1.0;
                     //yUpdated[0] = -1.0;
 
-                    yUpdatedScaled[0] = yUpdated[0] * 20;
-                    xUpdatedScaled[0] = xUpdated[0] * 20;
+                    yUpdatedScaled[0] = yUpdated[0] * 30;
+                    xUpdatedScaled[0] = xUpdated[0] * 30;
+
+                    xUpdated[0] = 0.0;
+                    yUpdated[0] = 0.0;
 
                     //showToast("injectingX"+yUpdatedScaled[0].intValue());
                     //showToast("injectingY"+xUpdatedScaled[0].intValue());
@@ -693,7 +699,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
                     for (int fy = 0; fy < drawable.size(); fy++) {
-                        for (int fx = 0; fx < drawable.get(0).size(); fx++) {
+                        for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
                             Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
                             drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
 ///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
@@ -761,7 +767,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     }
 
 
-                    if (resampling >= 10){
+                    if (resampling >= 5){
                         if (!founded){
                             Toast.makeText(getApplication(), "resampling", Toast.LENGTH_SHORT).show();
                             if (convergence <= 0.5){
