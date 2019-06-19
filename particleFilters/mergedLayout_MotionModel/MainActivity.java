@@ -113,9 +113,12 @@ public class MainActivity extends Activity implements OnClickListener {
     double offset;
     int offsetSteps = 0;
     double realAngle = 0;
+    double realangle2 = 0;
     boolean start = false;
     boolean founded = false;
     boolean init = true;
+    boolean first = true;
+    float substract= 0;
 
 
     @Nullable
@@ -189,7 +192,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     break;
                     */
 
-                /*
+
                 case Sensor.TYPE_ACCELEROMETER:
 
                     // Get the accelerometer values and set them to a string with 2dp
@@ -204,7 +207,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     //accelText.setText("Acc:" + x + "," + y + "," + z);
 
                     break;
-                    */
+
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     mData = event.values.clone();
                     break;
@@ -229,6 +232,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
                         }
 
+
                     } else {
                         // Apply the reverse of the calibration direction to the newly
                         //  obtained direction to obtain the direction the user is facing
@@ -251,14 +255,43 @@ public class MainActivity extends Activity implements OnClickListener {
                             mAzimuth = (float) ((Math.toDegrees(azz) + 360) % 360.0);
 
                         }
+                        if (first & mAzimuth!=0){
+                            substract = mAzimuth;
+                            first = false;
+                        }
+                        //Log.e("initiaaaaaal", ""+mAzimuthInitial); // 0
+                        //Log.e("AZIT", ""+mAzimuth);
+                        //Log.e("hello", ""+resize);
 
-                        if (mAzimuth > mAzimuthInitial || mAzimuth < 90) {
+                        if (mAzimuth < 330 || mAzimuth < 90) {
                             realAngle = -resize / 2.0; //rotating CW
-                        } else if (mAzimuth < mAzimuthInitial) {
+                        } else if (mAzimuth > 310) {
                             realAngle = resize / 2.0;
                         }
+
+                        //calibrationDirection = rotation;
+                        if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
+
+                            Float azzl = SensorManager.getOrientation(rMat, orientation)[0];
+
+                            float tryyy = (float) ((Math.toDegrees(azzl) + 360) % 360.0);
+                            realangle2 = -(tryyy-substract);
+
+                            if (realangle2<0){
+                                realangle2 = 360 + realangle2;
+                            }
+
+
+                            Log.e("initiaaaaaal", ""+realangle2); // 0
+
+                        }
+
+
                     }
-                    textView2.setText("\nangle"+ realAngle);
+
+
+                    textView2.setText("angle"+ realangle2);
+                    //Log.e("ANGLE", ""+realAngle);
                     //Log.e("Here", ""+realAngle);
 
                     break;
@@ -310,9 +343,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
         // set the buttons
         up = (Button) findViewById(R.id.button1);
-        left = (Button) findViewById(R.id.button2);
-        right = (Button) findViewById(R.id.button3);
-        down = (Button) findViewById(R.id.button4);
 
         // set the text view
         textView = (TextView) findViewById(R.id.textView1);
@@ -322,9 +352,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
         // set listeners
         up.setOnClickListener(this);
-        down.setOnClickListener(this);
-        left.setOnClickListener(this);
-        right.setOnClickListener(this);
+
 
         // get the screen dimensions
         Display display = getWindowManager().getDefaultDisplay();
@@ -469,7 +497,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
         // Reference/Assign the sensors
 
-        //senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         //senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         //senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
@@ -483,8 +511,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
         sensorManager.registerListener(thiss, senStepCounter, SENSOR_DELAY);
         //sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
-        //sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
-        //sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
+        sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(thiss, mag, SENSOR_DELAY);
         sensorManager.registerListener(thiss, mRotationSensor, SENSOR_DELAY);
 
@@ -540,47 +568,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
                 break;
             }
-            // DOWN BUTTON
-            case R.id.button4: {
-                for (int fy = 0; fy < drawable.size(); fy++) {
-                    for (int fx = 0; fx < drawable.get(0).size(); fx++) {
-                        Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-//                        drawable.get(fy).get(fx).setBounds(r.left,r.top+20,r.right,r.bottom+20);
-                        drawable.get(fy).get(fx).setBounds(r.left, r.top + 38, r.right, r.bottom + 38);
-                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                        textView.setText("\n\tMove Down" + "\n\tTop Margin = "
-                                + drawable.get(fy).get(fx).getBounds().top);
-                    }
-                }
-                break;
-            }
-            // LEFT BUTTON
-            case R.id.button2: {
-                for (int fy = 0; fy < drawable.size(); fy++) {
-                    for (int fx = 0; fx < drawable.get(0).size(); fx++) {
-                        Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-                        drawable.get(fy).get(fx).setBounds(r.left - 20, r.top, r.right - 20, r.bottom);
-                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                        textView.setText("\n\tMove Left" + "\n\tTop Margin = "
-                                + drawable.get(fy).get(fx).getBounds().top);
-                    }
-                }
 
-                break;
-            }
-            // RIGHT BUTTON
-            case R.id.button3: {
-                for (int fy = 0; fy < drawable.size(); fy++) {
-                    for (int fx = 0; fx < drawable.get(0).size(); fx++) {
-                        Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-                        drawable.get(fy).get(fx).setBounds(r.left + 20, r.top, r.right + 20, r.bottom);
-                        drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
-                        textView.setText("\n\tMove Right" + "\n\tTop Margin = "
-                                + drawable.get(fy).get(fx).getBounds().top);
-                    }
-                }
-                break;
-            }
         }
 
     }
@@ -663,17 +651,17 @@ public class MainActivity extends Activity implements OnClickListener {
                     //showToast("angle" + realAngle);
 
                     Log.e("I moved in magnitude", "" + distance[0]);
-                    Log.e("angle", "" + realAngle);
+                    Log.e("angle", "" + realangle2);
 
 
                     //showToast("angle"+realAngle);
                     //Toast.makeText(getApplication(), "angle"+realAngle, Toast.LENGTH_SHORT).show();
 
                     for (int i = 0; i < 5; i++) {
-                        xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
-                        yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
-
-
+                        //xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
+                        //yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
+                        xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realangle2));
+                        yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realangle2));
                     }
 
                     //showToast("x: " + xUpdated[0]);
@@ -685,8 +673,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     //xUpdated[0] = 1.0;
                     //yUpdated[0] = -1.0;
 
-                    yUpdatedScaled[0] = yUpdated[0] * 30;
-                    xUpdatedScaled[0] = xUpdated[0] * 30;
+                    yUpdatedScaled[0] = yUpdated[0] * 60;
+                    xUpdatedScaled[0] = xUpdated[0] * 60;
 
                     xUpdated[0] = 0.0;
                     yUpdated[0] = 0.0;
