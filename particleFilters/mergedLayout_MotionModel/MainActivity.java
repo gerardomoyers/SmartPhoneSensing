@@ -119,7 +119,11 @@ public class MainActivity extends Activity implements OnClickListener {
     boolean init = true;
     boolean first = true;
     float substract= 0;
+    double ofangle = 0;
+    double jeeje = 0;
 
+    float offsetfirst = 0;
+    boolean firsthere = true;
 
     @Nullable
     private Rotation calibrationDirection;
@@ -220,6 +224,68 @@ public class MainActivity extends Activity implements OnClickListener {
                             (double) event.values[1], // quaternion y
                             (double) event.values[2], // quaternion z
                             false); // no need to normalise
+                    Log.e("htsttst", ""+event.values[2]);
+
+                    if (event.values[2]!=0 && firsthere){
+
+                        offsetfirst = event.values[2];
+
+
+                            ofangle = (int) ((offsetfirst * 180) / (double) 0.99995);
+
+//                        else{
+//
+//                        }
+                    firsthere = false;
+                }
+                    Log.e("first", ""+offsetfirst);
+
+                    if (! firsthere) {
+                        int definit = 0;
+                        double input = 0;
+
+
+                        if (event.values[2] > 0) {
+                            definit = (int) ((event.values[2] * 180) / (double) 0.99995);
+
+
+                        } else {
+                            definit = 360 + (int) ((event.values[2]) * 180 / (double) 0.99995);
+                        }
+                        jeeje = definit-ofangle;
+                        if (definit - ofangle <0 ) {
+                            jeeje = 360 - (ofangle - definit);
+                        }
+                        else{
+                            jeeje = definit - ofangle;
+
+                        }
+                        Log.e("ofangle", ""+ofangle);
+                        //i have definit
+                        Log.e("definit", ""+definit);
+                        Log.e("diahoiahaafap", "" +jeeje );
+
+
+
+                        if (event.values[2] - offsetfirst > 0) {
+                            input = definit - ofangle;
+                        } else{
+                            if (event.values[2] >0){
+                                input = 360 - 180*(offsetfirst - event.values[2]);
+                            }
+                            else
+                                {
+                                    if ((1 + event.values[2])<offsetfirst){
+                                        input = 180 - ofangle;
+                                    }
+                                    else {
+                                        input = 360 + definit - ofangle;
+                                    }
+                                }
+                        }
+
+
+                    }
 
                     if (calibrationDirection == null) {
                         // Save the first sensor value obtained as the calibration value
@@ -257,6 +323,7 @@ public class MainActivity extends Activity implements OnClickListener {
                         }
                         if (first & mAzimuth!=0){
                             substract = mAzimuth;
+                            Log.e("initiaaaaaal", ""+substract);
                             first = false;
                         }
                         //Log.e("initiaaaaaal", ""+mAzimuthInitial); // 0
@@ -281,8 +348,28 @@ public class MainActivity extends Activity implements OnClickListener {
                                 realangle2 = 360 + realangle2;
                             }
 
+                            //if re
+                            if ((jeeje<360&&jeeje>320) || (jeeje <35 && realangle2>0)){
+                                jeeje = 0;
 
-                            Log.e("initiaaaaaal", ""+realangle2); // 0
+                            }
+                            else if (jeeje>70 && jeeje <120) {
+                                jeeje = 90;
+
+                            }
+                            else if (jeeje>140 && jeeje <220) {
+
+                                jeeje = 180;
+
+                            }
+                            else if (jeeje>228 && jeeje <310) {
+
+                                jeeje = 270;
+
+                            }
+
+
+                            //Log.e("initiaaaaaal", ""+realangle2); // 0
 
                         }
 
@@ -290,7 +377,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     }
 
 
-                    textView2.setText("angle"+ realangle2);
+                    textView2.setText("angle"+ jeeje);
                     //Log.e("ANGLE", ""+realAngle);
                     //Log.e("Here", ""+realAngle);
 
@@ -650,8 +737,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     //showToast("I moved in magnitude" + distance[0]);
                     //showToast("angle" + realAngle);
 
-                    Log.e("I moved in magnitude", "" + distance[0]);
-                    Log.e("angle", "" + realangle2);
+                    //Log.e("I moved in magnitude", "" + distance[0]);
+                    //Log.e("angle", "" + realangle2);
 
 
                     //showToast("angle"+realAngle);
@@ -666,15 +753,15 @@ public class MainActivity extends Activity implements OnClickListener {
 
                     //showToast("x: " + xUpdated[0]);
                     //showToast("y: " + yUpdated[0]);
-                    Log.e("x", "" + xUpdated[0]);
-                    Log.e("y", "" + yUpdated[0]);
+                    //Log.e("x", "" + xUpdated[0]);
+                    //Log.e("y", "" + yUpdated[0]);
 
 
                     //xUpdated[0] = 1.0;
                     //yUpdated[0] = -1.0;
 
-                    yUpdatedScaled[0] = yUpdated[0] * 60;
-                    xUpdatedScaled[0] = xUpdated[0] * 60;
+                    yUpdatedScaled[0] = yUpdated[0] * 70;
+                    xUpdatedScaled[0] = xUpdated[0] * 70;
 
                     xUpdated[0] = 0.0;
                     yUpdated[0] = 0.0;
@@ -688,8 +775,10 @@ public class MainActivity extends Activity implements OnClickListener {
 
                     for (int fy = 0; fy < drawable.size(); fy++) {
                         for (int fx = 0; fx < drawable.get(fy).size(); fx++) {
+                            int noise = new Random().nextInt(10)-5;
+                            int noise2 = new Random().nextInt(10)-5;
                             Rect r = new Rect(drawable.get(fy).get(fx).getBounds());
-                            drawable.get(fy).get(fx).setBounds(r.left + yUpdatedScaled[0].intValue(), r.top + xUpdatedScaled[0].intValue(), r.right + yUpdatedScaled[0].intValue(), r.bottom + xUpdatedScaled[0].intValue());
+                            drawable.get(fy).get(fx).setBounds(r.left + noise + yUpdatedScaled[0].intValue(), r.top + noise2 + xUpdatedScaled[0].intValue(), r.right +noise + yUpdatedScaled[0].intValue(), r.bottom + noise2 + xUpdatedScaled[0].intValue());
 ///                        drawable.get(fy).get(fx).setBounds(r.left,r.top-20,r.right,r.bottom-20);
                             drawablebefore.get(fy).get(fx).setBounds(r.left, r.top, r.right, r.bottom);
                             //textView.setText("\n\tMove Up" + "\n\tTop Margin = "+ drawable.get(fy).get(fx).getBounds().top);
