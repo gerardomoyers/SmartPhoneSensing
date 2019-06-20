@@ -47,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.StrictMath.abs;
+
 
 /**
  * Smart Phone Sensing Example 6. Object movement and interaction on canvas.
@@ -121,9 +123,24 @@ public class MainActivity extends Activity implements OnClickListener {
     float substract= 0;
     double ofangle = 0;
     double jeeje = 0;
+    double thisvalue =0;
+    double lastvalueCW = 0;
+    double finallyy = 0;
+    double lastvalcorrect =0;
+    double lastval = 0;
+    int definit = 0;
+    int counter = 0;
+    boolean increasing = false;
+    boolean proces = true;
+    int one,two, three, four, five, six;
+    Integer[] values = new Integer[]{0, 0, 0, 0, 0, 0};
+
+    int option =1;
+    double ang;
 
     float offsetfirst = 0;
     boolean firsthere = true;
+    boolean steady = true;
 
     @Nullable
     private Rotation calibrationDirection;
@@ -154,6 +171,8 @@ public class MainActivity extends Activity implements OnClickListener {
             // the sensor type (caller)
 
             switch (event.sensor.getType()) {
+
+
 
                 case Sensor.TYPE_STEP_COUNTER:
                     //now = event.timestamp;
@@ -186,12 +205,29 @@ public class MainActivity extends Activity implements OnClickListener {
                     offsetSteps=+1;
                     counterFirst ++;
                     break;
-                /*
+
+
+                    /*
+
                 case Sensor.TYPE_STEP_DETECTOR:
 
                     stepDetector++;
 
                     stepDetector = 0;
+
+                    break;
+                    */
+                    /*
+
+                case Sensor.TYPE_STEP_DETECTOR:
+
+                    // Increment the step detector count
+                    CustomView hello = new CustomView(context);
+                    stepsTaken = 1;
+                    if (start) {
+                        hello.moveParticles();
+                    }
+
 
                     break;
                     */
@@ -218,73 +254,145 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
                 case Sensor.TYPE_ROTATION_VECTOR:
+                    counter +=1;
                     Rotation rotation = new Rotation(
                             (double) event.values[3], // quaternion scalar
                             (double) event.values[0], // quaternion x
                             (double) event.values[1], // quaternion y
                             (double) event.values[2], // quaternion z
                             false); // no need to normalise
-                    Log.e("htsttst", ""+event.values[2]);
 
-                    if (event.values[2]!=0 && firsthere){
+                    if (event.values[2]>0 && firsthere) {
 
                         offsetfirst = event.values[2];
+                        ofangle = (int) ((offsetfirst * 180) / (double) 0.99995);
+                        firsthere = false;
+                        lastval = definit;
+                    }
+
+                    else if (event.values[2]<0 && firsthere){
+                        offsetfirst = event.values[2];
+                        ofangle = (int) ((-offsetfirst * 180) / (double) 0.99995); // we would have 180 to 360
+                        ofangle = 360 - ofangle; // biggest value of ofangle = 180, smallest 360
+                        firsthere = false; //in this case we want to map the value to an offset of from 180 on that's value of ofangle
+                    }
 
 
-                            ofangle = (int) ((offsetfirst * 180) / (double) 0.99995);
-
-//                        else{
-//
-//                        }
-                    firsthere = false;
-                }
-                    Log.e("first", ""+offsetfirst);
+                    //Log.e("first", ""+offsetfirst);
 
                     if (! firsthere) {
-                        int definit = 0;
+
                         double input = 0;
 
 
                         if (event.values[2] > 0) {
                             definit = (int) ((event.values[2] * 180) / (double) 0.99995);
-
-
                         } else {
                             definit = 360 + (int) ((event.values[2]) * 180 / (double) 0.99995);
                         }
-                        jeeje = definit-ofangle;
-                        if (definit - ofangle <0 ) {
-                            jeeje = 360 - (ofangle - definit);
-                        }
-                        else{
-                            jeeje = definit - ofangle;
 
-                        }
-                        Log.e("ofangle", ""+ofangle);
-                        //i have definit
-                        Log.e("definit", ""+definit);
-                        Log.e("diahoiahaafap", "" +jeeje );
+                            //this is working if i spin CCW
+                            if (increasing) {
+                                if (definit - ofangle > 0) {
+                                    finallyy = definit - ofangle;
+                                    lastvalueCW = finallyy;
 
-
-
-                        if (event.values[2] - offsetfirst > 0) {
-                            input = definit - ofangle;
-                        } else{
-                            if (event.values[2] >0){
-                                input = 360 - 180*(offsetfirst - event.values[2]);
-                            }
-                            else
-                                {
-                                    if ((1 + event.values[2])<offsetfirst){
-                                        input = 180 - ofangle;
-                                    }
-                                    else {
-                                        input = 360 + definit - ofangle;
-                                    }
+                                } else if (definit - ofangle < 0) { //198 of ofangle, therefore if we are in definit 20
+                                        finallyy = 360 - ofangle + definit;
+                                    lastvalueCW = finallyy;
                                 }
+
+                            } else if (definit - ofangle == 0) {
+                                finallyy = 0;
+                                lastvalueCW = finallyy;
+                            }
+                            else if (!increasing) { //CW
+                                if (definit < ofangle - 1) {
+                                    finallyy = 360 - (ofangle-definit);
+                                    lastvalueCW = finallyy;
+                                } else if (definit - ofangle == 0) {
+                                    finallyy = 0;
+                                    lastvalueCW = finallyy;
+                                } else if (definit > ofangle) {
+                                    finallyy = definit - ofangle;
+                                    lastvalueCW = finallyy;
+                                }
+                            }
+                            else if (steady){
+                                //we would have the value of definit
+                                if (definit-ofangle>0) {
+                                    finallyy = definit - ofangle;
+                                }
+                                else{
+                                    finallyy = definit +360 -ofangle;
+                                }
+                            }
+
+
+                        switch (counter){
+                            case 1: {
+                                values[0] = definit;
+                                proces = true;
+                            }
+                            break;
+                            case 2: {
+                                values[1]= definit;
+                                proces = true;
+                            }
+                            break;
+                            case 3: {
+                                values[2] = definit;
+                                proces = true;
+                            }
+                            break;
+                            case 4: {
+                                values[3]= definit;
+                                proces = true;
+                            }
+                            break;
+                            case 5: {
+                                values[4] = definit;
+                                proces = true;
+                            }
+                            break;
+                            case 6: {
+                                values[5] = definit;
+                                proces = true;
+                            }
+                            break;
+                            case 7: {
+                                int numZeros = 0;
+                                int result = 0;
+
+                                for (int i =5; i>1;i--){
+                                    if (abs(values[i] - values[i-1]) <= 3){
+                                        numZeros++;
+                                    }
+                                    if (values[i] < 5){
+                                        values[i] = values[i] +360;
+                                    }
+                                    result = values[i] - values[i-1] + result;
+
+                                }
+
+                                if (numZeros >=2){
+                                    steady = true;
+                                }
+                                else {
+                                    steady = false;
+                                    if (result >0){
+                                        increasing = true;
+                                    }
+                                    else{
+                                        increasing = false;
+                                    }
+
+                                }
+
+                                counter = 0;
+                            }
+                            break;
                         }
-
-
                     }
 
                     if (calibrationDirection == null) {
@@ -300,41 +408,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 
                     } else {
-                        // Apply the reverse of the calibration direction to the newly
-                        //  obtained direction to obtain the direction the user is facing
-                        //  relative to his/her original direction
-                        latestDirection = calibrationDirection.applyInverseTo(rotation);
-                        double value = latestDirection.getAngles(RotationOrder.XYX)[1] * 360;
-
-                        if (value > 1040) {
-                            value = 1040;
-                        }
-                        if (value < 40) {
-                            value = 40;
-                        }
-                        double resize = (value - 40) * (360 - 0) / (double) (1040 - 40) + 0.0;
-
-                        if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
-
-                            Float azz = SensorManager.getOrientation(rMat, orientation)[0];
-
-                            mAzimuth = (float) ((Math.toDegrees(azz) + 360) % 360.0);
-
-                        }
-                        if (first & mAzimuth!=0){
-                            substract = mAzimuth;
-                            Log.e("initiaaaaaal", ""+substract);
-                            first = false;
-                        }
-                        //Log.e("initiaaaaaal", ""+mAzimuthInitial); // 0
-                        //Log.e("AZIT", ""+mAzimuth);
-                        //Log.e("hello", ""+resize);
-
-                        if (mAzimuth < 330 || mAzimuth < 90) {
-                            realAngle = -resize / 2.0; //rotating CW
-                        } else if (mAzimuth > 310) {
-                            realAngle = resize / 2.0;
-                        }
 
                         //calibrationDirection = rotation;
                         if (SensorManager.getRotationMatrix(rMat, iMat, gData, mData)) {
@@ -342,44 +415,20 @@ public class MainActivity extends Activity implements OnClickListener {
                             Float azzl = SensorManager.getOrientation(rMat, orientation)[0];
 
                             float tryyy = (float) ((Math.toDegrees(azzl) + 360) % 360.0);
-                            realangle2 = -(tryyy-substract);
-
-                            if (realangle2<0){
-                                realangle2 = 360 + realangle2;
-                            }
-
-                            //if re
-                            if ((jeeje<360&&jeeje>320) || (jeeje <35 && realangle2>0)){
-                                jeeje = 0;
-
-                            }
-                            else if (jeeje>70 && jeeje <120) {
-                                jeeje = 90;
-
-                            }
-                            else if (jeeje>140 && jeeje <220) {
-
-                                jeeje = 180;
-
-                            }
-                            else if (jeeje>228 && jeeje <310) {
-
-                                jeeje = 270;
-
-                            }
 
 
-                            //Log.e("initiaaaaaal", ""+realangle2); // 0
+                            //finallyy = definit - ofangle;
+                            textView2.setText("angle"+ finallyy);
 
                         }
-
 
                     }
 
 
-                    textView2.setText("angle"+ jeeje);
+                    //textView2.setText("angle"+ realAngle);
                     //Log.e("ANGLE", ""+realAngle);
                     //Log.e("Here", ""+realAngle);
+
 
                     break;
 
@@ -586,7 +635,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
         senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        //senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        senStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         //senRotation = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         mag = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
@@ -597,7 +646,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // the SensorManager when sensor values have changed.
 
         sensorManager.registerListener(thiss, senStepCounter, SENSOR_DELAY);
-        //sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
+        sensorManager.registerListener(thiss, senStepDetector, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senAccelerometer, SENSOR_DELAY);
         sensorManager.registerListener(thiss, senRotation, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(thiss, mag, SENSOR_DELAY);
@@ -747,8 +796,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     for (int i = 0; i < 5; i++) {
                         //xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realAngle));
                         //yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realAngle));
-                        xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(realangle2));
-                        yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(realangle2));
+                        xUpdated[i] = xUpdated[i] + distance[i] * Math.cos(Math.toRadians(finallyy));
+                        yUpdated[i] = yUpdated[i] + distance[i] * Math.sin(Math.toRadians(finallyy));
                     }
 
                     //showToast("x: " + xUpdated[0]);
